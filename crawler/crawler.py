@@ -772,7 +772,6 @@ def crawl_ppomppu(period="daily"):
 # 8. JSON 저장 / 로드
 # -----------------------------------------
 POST_JSON_PATH = os.path.join(os.path.dirname(__file__), "..", "public", "data", "posts.json")
-MAX_AGE_DAYS = 7  # 7일 이상 된 글 삭제
 
 def load_existing_posts():
     try:
@@ -789,31 +788,17 @@ def save_to_json(posts):
     print(f"posts.json 저장 완료 ({len(posts)}개)")
 
 def merge_posts(existing, new_posts):
-    """기존 글 보존 + 새 글 추가 (같은 id+period면 새 글로 갱신, 오래된 글 삭제)"""
-    cutoff = datetime.utcnow() - timedelta(days=MAX_AGE_DAYS)
-
-    # 기존 글을 dict로
+    """기존 글 보존 + 새 글 추가 (같은 id+period면 새 글로 갱신)"""
     post_map = {}
     for p in existing:
         key = (p["id"], p["period"])
         post_map[key] = p
 
-    # 새 글로 갱신/추가
     for p in new_posts:
         key = (p["id"], p["period"])
         post_map[key] = p
 
-    # 오래된 글 삭제
-    result = []
-    for p in post_map.values():
-        try:
-            crawled = datetime.fromisoformat(p["crawled_at"])
-            if crawled >= cutoff:
-                result.append(p)
-        except (ValueError, KeyError):
-            result.append(p)
-
-    # 최신순 정렬
+    result = list(post_map.values())
     result.sort(key=lambda x: x.get("crawled_at", ""), reverse=True)
     return result
 
