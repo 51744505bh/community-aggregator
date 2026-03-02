@@ -30,18 +30,39 @@ function sanitizeHtml(html: string): string {
   return html;
 }
 
+const PROXY_DOMAINS = ["dcinside.co.kr", "dcinside.com"];
+
+function needsProxy(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return PROXY_DOMAINS.some((d) => hostname === d || hostname.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
+
+function rewriteMediaUrl(url: string): { src: string; attrs: string } {
+  if (needsProxy(url)) {
+    return { src: `/api/image?url=${encodeURIComponent(url)}`, attrs: "" };
+  }
+  return { src: url, attrs: ' referrerpolicy="no-referrer"' };
+}
+
 function proxyMedia(html: string): string {
   html = sanitizeHtml(html);
-  // 이미지: referrerpolicy 추가하여 브라우저에서 직접 로드 (Referer 없이)
   html = html.replace(
     /<img([^>]*?)src="(https?:\/\/[^"]+)"([^>]*?)>/g,
-    (match, before, url, after) =>
-      `<img${before}src="${url}" referrerpolicy="no-referrer" loading="lazy"${after}>`
+    (match, before, url, after) => {
+      const r = rewriteMediaUrl(url);
+      return `<img${before}src="${r.src}"${r.attrs} loading="lazy"${after}>`;
+    }
   );
   html = html.replace(
     /<video([^>]*?)src="(https?:\/\/[^"]+)"([^>]*?)>/g,
-    (match, before, url, after) =>
-      `<video${before}src="${url}" referrerpolicy="no-referrer"${after}>`
+    (match, before, url, after) => {
+      const r = rewriteMediaUrl(url);
+      return `<video${before}src="${r.src}"${r.attrs}${after}>`;
+    }
   );
   return html;
 }
@@ -104,16 +125,19 @@ export default async function PostDetail({
 
       {!post.content && post.image_urls && post.image_urls.length > 0 && (
         <div className="my-4 space-y-3">
-          {post.image_urls.map((imgUrl, i) => (
-            <img
-              key={i}
-              src={imgUrl}
-              referrerPolicy="no-referrer"
-              alt=""
-              className="w-full rounded"
-              loading="lazy"
-            />
-          ))}
+          {post.image_urls.map((imgUrl, i) => {
+            const r = rewriteMediaUrl(imgUrl);
+            return (
+              <img
+                key={i}
+                src={r.src}
+                referrerPolicy={needsProxy(imgUrl) ? undefined : "no-referrer"}
+                alt=""
+                className="w-full rounded"
+                loading="lazy"
+              />
+            );
+          })}
         </div>
       )}
 

@@ -2,6 +2,18 @@ import Link from "next/link";
 import type { Post } from "@/lib/posts";
 import { sourceColors } from "@/lib/posts";
 
+const PROXY_DOMAINS = ["dcinside.co.kr", "dcinside.com"];
+
+function getThumbnailProps(url: string) {
+  try {
+    const hostname = new URL(url).hostname;
+    if (PROXY_DOMAINS.some((d) => hostname === d || hostname.endsWith("." + d))) {
+      return { src: `/api/image?url=${encodeURIComponent(url)}` };
+    }
+  } catch {}
+  return { src: url, referrerPolicy: "no-referrer" as const };
+}
+
 export default function PostCard({ post }: { post: Post }) {
   const colorClass = sourceColors[post.source] || "bg-gray-100 text-gray-700";
 
@@ -10,8 +22,7 @@ export default function PostCard({ post }: { post: Post }) {
       <div className="flex gap-4 p-4 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
         {post.thumbnail_url && (
           <img
-            src={post.thumbnail_url}
-            referrerPolicy="no-referrer"
+            {...getThumbnailProps(post.thumbnail_url)}
             alt=""
             className="w-32 h-24 object-cover rounded flex-shrink-0"
           />
