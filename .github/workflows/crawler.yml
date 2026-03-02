@@ -17,6 +17,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       - name: Install dependencies
         run: pip install -r crawler/requirements.txt
 
@@ -30,3 +35,9 @@ jobs:
           git add public/data/posts.json
           git commit -m "Update posts.json" || echo "No changes"
           git push
+
+      - name: Deploy to Vercel
+        run: npx vercel --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
