@@ -25,11 +25,37 @@ function getReferer(url: string): string {
   }
 }
 
+const ALLOWED_DOMAINS = [
+  "dcinside.co.kr",
+  "dcinside.com",
+  "ruliweb.com",
+  "fmkorea.com",
+  "bobaedream.co.kr",
+  "dogdrip.net",
+  "clien.net",
+  "ppomppu.co.kr",
+  "imgur.com",
+  "i.imgur.com",
+];
+
+function isAllowedDomain(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return ALLOWED_DOMAINS.some((domain) => hostname === domain || hostname.endsWith("." + domain));
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");
 
   if (!url) {
     return NextResponse.json({ error: "url parameter required" }, { status: 400 });
+  }
+
+  if (!isAllowedDomain(url)) {
+    return NextResponse.json({ error: "domain not allowed" }, { status: 403 });
   }
 
   try {

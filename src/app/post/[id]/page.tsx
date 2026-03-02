@@ -2,7 +2,36 @@ import { getPostById, sourceColors } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
 import Link from "next/link";
 
+function sanitizeHtml(html: string): string {
+  // script, iframe, object, embed, form 태그 제거
+  html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+  html = html.replace(/<\/script>/gi, "");
+  html = html.replace(/<script[^>]*>/gi, "");
+  html = html.replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "");
+  html = html.replace(/<iframe[^>]*>/gi, "");
+  html = html.replace(/<object[\s\S]*?<\/object>/gi, "");
+  html = html.replace(/<embed[^>]*>/gi, "");
+  html = html.replace(/<form[\s\S]*?<\/form>/gi, "");
+  html = html.replace(/<link[^>]*>/gi, "");
+  html = html.replace(/<meta[^>]*>/gi, "");
+  html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
+
+  // on* 이벤트 핸들러 제거 (onclick, onerror 등)
+  html = html.replace(/\s+on\w+\s*=\s*"[^"]*"/gi, "");
+  html = html.replace(/\s+on\w+\s*=\s*'[^']*'/gi, "");
+  html = html.replace(/\s+on\w+\s*=\s*[^\s>]+/gi, "");
+
+  // javascript: URL 제거
+  html = html.replace(/href\s*=\s*"javascript:[^"]*"/gi, 'href="#"');
+  html = html.replace(/src\s*=\s*"javascript:[^"]*"/gi, "");
+  html = html.replace(/href\s*=\s*'javascript:[^']*'/gi, "href='#'");
+  html = html.replace(/src\s*=\s*'javascript:[^']*'/gi, "");
+
+  return html;
+}
+
 function proxyMedia(html: string): string {
+  html = sanitizeHtml(html);
   html = html.replace(
     /<img([^>]*?)src="(https?:\/\/[^"]+)"([^>]*?)>/g,
     (match, before, url, after) =>
