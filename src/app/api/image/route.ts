@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ error: "fetch failed" }, { status: 502 });
+      return NextResponse.json({ error: "fetch failed", status: res.status, statusText: res.statusText }, { status: 502 });
     }
 
     const contentType = res.headers.get("content-type") || "image/jpeg";
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         "Cache-Control": "public, max-age=86400",
       },
     });
-  } catch {
-    return NextResponse.json({ error: "proxy error" }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: "proxy error", detail: String(e) }, { status: 500 });
   }
 }
