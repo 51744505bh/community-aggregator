@@ -32,15 +32,16 @@ function sanitizeHtml(html: string): string {
 
 function proxyMedia(html: string): string {
   html = sanitizeHtml(html);
+  // 이미지: referrerpolicy 추가하여 브라우저에서 직접 로드 (Referer 없이)
   html = html.replace(
     /<img([^>]*?)src="(https?:\/\/[^"]+)"([^>]*?)>/g,
     (match, before, url, after) =>
-      `<img${before}src="/api/image?url=${encodeURIComponent(url)}"${after}>`
+      `<img${before}src="${url}" referrerpolicy="no-referrer" loading="lazy"${after}>`
   );
   html = html.replace(
     /<video([^>]*?)src="(https?:\/\/[^"]+)"([^>]*?)>/g,
     (match, before, url, after) =>
-      `<video${before}src="/api/image?url=${encodeURIComponent(url)}"${after}>`
+      `<video${before}src="${url}" referrerpolicy="no-referrer"${after}>`
   );
   return html;
 }
@@ -106,7 +107,8 @@ export default async function PostDetail({
           {post.image_urls.map((imgUrl, i) => (
             <img
               key={i}
-              src={`/api/image?url=${encodeURIComponent(imgUrl)}`}
+              src={imgUrl}
+              referrerPolicy="no-referrer"
               alt=""
               className="w-full rounded"
               loading="lazy"

@@ -10,7 +10,8 @@ export default function PostCard({ post }: { post: Post }) {
       <div className="flex gap-4 p-4 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
         {post.thumbnail_url && (
           <img
-            src={`/api/image?url=${encodeURIComponent(post.thumbnail_url)}`}
+            src={post.thumbnail_url}
+            referrerPolicy="no-referrer"
             alt=""
             className="w-32 h-24 object-cover rounded flex-shrink-0"
           />
