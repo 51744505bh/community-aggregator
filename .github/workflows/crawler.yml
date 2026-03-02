@@ -5,12 +5,17 @@ on:
     - cron: '0 * * * *'  # 매 시간 실행
   workflow_dispatch:       # 수동 실행 가능
 
+permissions:
+  contents: write
+
 jobs:
   crawl:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
