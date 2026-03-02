@@ -36,6 +36,9 @@ const ALLOWED_DOMAINS = [
   "ppomppu.co.kr",
   "imgur.com",
   "i.imgur.com",
+  "pstatic.net",
+  "naver.net",
+  "postfiles.pstatic.net",
 ];
 
 function isAllowedDomain(url: string): boolean {
