@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import time
 import os
@@ -769,15 +769,53 @@ def crawl_ppomppu(period="daily"):
 
 
 # -----------------------------------------
-# 8. JSON 저장
+# 8. JSON 저장 / 로드
 # -----------------------------------------
+POST_JSON_PATH = os.path.join(os.path.dirname(__file__), "..", "public", "data", "posts.json")
+MAX_AGE_DAYS = 7  # 7일 이상 된 글 삭제
+
+def load_existing_posts():
+    try:
+        with open(POST_JSON_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
 def save_to_json(posts):
-    output_dir = os.path.join(os.path.dirname(__file__), "..", "public", "data")
+    output_dir = os.path.dirname(POST_JSON_PATH)
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, "posts.json")
-    with open(output_path, "w", encoding="utf-8") as f:
+    with open(POST_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(posts, f, ensure_ascii=False, indent=2)
     print(f"posts.json 저장 완료 ({len(posts)}개)")
+
+def merge_posts(existing, new_posts):
+    """기존 글 보존 + 새 글 추가 (같은 id+period면 새 글로 갱신, 오래된 글 삭제)"""
+    cutoff = datetime.utcnow() - timedelta(days=MAX_AGE_DAYS)
+
+    # 기존 글을 dict로
+    post_map = {}
+    for p in existing:
+        key = (p["id"], p["period"])
+        post_map[key] = p
+
+    # 새 글로 갱신/추가
+    for p in new_posts:
+        key = (p["id"], p["period"])
+        post_map[key] = p
+
+    # 오래된 글 삭제
+    result = []
+    for p in post_map.values():
+        try:
+            crawled = datetime.fromisoformat(p["crawled_at"])
+            if crawled >= cutoff:
+                result.append(p)
+        except (ValueError, KeyError):
+            result.append(p)
+
+    # 최신순 정렬
+    result.sort(key=lambda x: x.get("crawled_at", ""), reverse=True)
+    return result
 
 
 # -----------------------------------------
@@ -785,7 +823,10 @@ def save_to_json(posts):
 # -----------------------------------------
 def main():
     print("크롤링 시작...")
-    all_posts = []
+    existing_posts = load_existing_posts()
+    print(f"기존 게시글: {len(existing_posts)}개")
+
+    new_posts = []
 
     # period별 크롤러: (사이트명, 함수, 기간별 URL 지원 여부)
     crawlers = [
@@ -814,23 +855,16 @@ def main():
                     posts = crawler(period="daily")
                 else:
                     continue
-                all_posts.extend(posts)
+                new_posts.extend(posts)
                 print(f"  {name}: {len(posts)}개")
                 time.sleep(2)
             except Exception as e:
                 print(f"  {name} 오류: {e}")
 
-    # 중복 제거 (같은 글이 다른 기간에 나올 수 있음)
-    seen = set()
-    unique_posts = []
-    for post in all_posts:
-        key = (post["id"], post["period"])
-        if key not in seen:
-            seen.add(key)
-            unique_posts.append(post)
-
-    save_to_json(unique_posts)
-    print(f"\n총 {len(unique_posts)}개 완료!")
+    print(f"\n새로 수집: {len(new_posts)}개")
+    merged = merge_posts(existing_posts, new_posts)
+    save_to_json(merged)
+    print(f"총 {len(merged)}개 완료! (기존 {len(existing_posts)} → 병합 후 {len(merged)})")
 
 
 if __name__ == "__main__":
