@@ -39,11 +39,16 @@ export function getPostsByCategory(category: string): Post[] {
   const filtered = posts.filter((p) => p.category === category);
   // 같은 ID가 여러 period에 있을 수 있으므로 중복 제거
   const seen = new Set<string>();
-  return filtered.filter((p) => {
-    if (seen.has(p.id)) return false;
-    seen.add(p.id);
-    return true;
-  });
+  return filtered
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .sort(
+      (a, b) =>
+        (b.view_count + b.like_count * 10) - (a.view_count + a.like_count * 10)
+    );
 }
 
 export function getPostsByPeriod(period: string): Post[] {
@@ -52,7 +57,7 @@ export function getPostsByPeriod(period: string): Post[] {
     .filter((p) => p.period === period)
     .sort(
       (a, b) =>
-        new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime()
+        (b.view_count + b.like_count * 10) - (a.view_count + a.like_count * 10)
     );
 }
 
