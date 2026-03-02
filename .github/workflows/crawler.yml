@@ -1,0 +1,32 @@
+name: Run Crawler
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 매 시간 실행
+  workflow_dispatch:       # 수동 실행 가능
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r crawler/requirements.txt
+
+      - name: Run crawler
+        run: python crawler/crawler.py
+
+      - name: Commit and push posts.json
+        run: |
+          git config --global user.name "crawler-bot"
+          git config --global user.email "bot@example.com"
+          git add public/data/posts.json
+          git commit -m "Update posts.json" || echo "No changes"
+          git push
