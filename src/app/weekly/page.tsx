@@ -1,9 +1,17 @@
 import { getPostsByPeriod } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdBanner from "@/components/AdBanner";
+import Pagination, { paginate } from "@/components/Pagination";
 
-export default function WeeklyPage() {
-  const posts = getPostsByPeriod("weekly");
+export default async function WeeklyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
+  const allPosts = getPostsByPeriod("weekly");
+  const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (
     <>
@@ -18,6 +26,7 @@ export default function WeeklyPage() {
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/weekly" />
       <AdBanner type="coupang" />
     </>
   );

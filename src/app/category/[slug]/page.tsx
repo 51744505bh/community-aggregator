@@ -1,14 +1,20 @@
 import { getPostsByCategory, categoryMap } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdBanner from "@/components/AdBanner";
+import Pagination, { paginate } from "@/components/Pagination";
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { slug } = await params;
-  const posts = getPostsByCategory(slug);
+  const { page } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
+  const allPosts = getPostsByCategory(slug);
+  const { items: posts, totalPages } = paginate(allPosts, currentPage);
   const categoryName = categoryMap[slug] || slug;
 
   return (
@@ -24,6 +30,7 @@ export default async function CategoryPage({
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} basePath={`/category/${slug}`} />
       <AdBanner type="coupang" />
     </>
   );

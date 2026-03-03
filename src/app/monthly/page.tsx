@@ -1,9 +1,17 @@
 import { getPostsByPeriod } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdBanner from "@/components/AdBanner";
+import Pagination, { paginate } from "@/components/Pagination";
 
-export default function MonthlyPage() {
-  const posts = getPostsByPeriod("monthly");
+export default async function MonthlyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
+  const allPosts = getPostsByPeriod("monthly");
+  const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (
     <>
@@ -18,6 +26,7 @@ export default function MonthlyPage() {
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/monthly" />
       <AdBanner type="coupang" />
     </>
   );

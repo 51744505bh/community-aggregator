@@ -1,14 +1,17 @@
 import { searchPosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
+import Pagination, { paginate } from "@/components/Pagination";
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page } = await searchParams;
   const query = q || "";
-  const posts = query ? searchPosts(query) : [];
+  const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
+  const allPosts = query ? searchPosts(query) : [];
+  const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (
     <>
@@ -16,7 +19,7 @@ export default async function SearchPage({
         검색 결과
       </h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        &ldquo;{query}&rdquo; {posts.length > 0 ? `${posts.length}개` : ""}
+        &ldquo;{query}&rdquo; {allPosts.length > 0 ? `${allPosts.length}개` : ""}
       </p>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
         {posts.length === 0 ? (
@@ -27,6 +30,7 @@ export default async function SearchPage({
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} basePath={`/search?q=${encodeURIComponent(query)}`} />
     </>
   );
 }
