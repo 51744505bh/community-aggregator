@@ -1,5 +1,6 @@
 import { getPostById, sourceColors } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
+import ViewCounter from "@/components/ViewCounter";
 import Link from "next/link";
 
 function sanitizeHtml(html: string): string {
@@ -112,6 +113,7 @@ export default async function PostDetail({
           })}
         </span>
         <span>조회 {post.view_count.toLocaleString()}</span>
+        <ViewCounter postId={post.id} />
         <span>추천 {post.like_count.toLocaleString()}</span>
         <span>댓글 {post.comment_count.toLocaleString()}</span>
       </div>
