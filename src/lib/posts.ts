@@ -1,6 +1,11 @@
 import fs from "fs";
 import path from "path";
 
+export interface PostComment {
+  text: string;
+  likes: number;
+}
+
 export interface Post {
   id: string;
   source: string;
@@ -16,6 +21,7 @@ export interface Post {
   view_count: number;
   comment_count: number;
   like_count: number;
+  top_comments?: PostComment[];
   crawled_at: string;
 }
 

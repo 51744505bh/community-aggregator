@@ -110,8 +110,58 @@ def extract_text_summary(content_el, max_len=150) -> str:
     return text
 
 
-def fetch_detail_content(url: str, content_selector: str, encoding: str = None) -> dict:
-    result = {"content": "", "summary": "", "image_urls": []}
+def extract_top_comments(soup, comment_sel, text_sel=None, likes_sel=None, max_count=5):
+    """페이지에서 상위 댓글을 추출"""
+    comments = []
+    if not comment_sel:
+        return comments
+
+    items = soup.select(comment_sel)
+    for item in items:
+        # 댓글 텍스트 추출
+        if text_sel:
+            text_el = item.select_one(text_sel)
+            text = text_el.get_text(strip=True) if text_el else ""
+        else:
+            text = item.get_text(strip=True)
+
+        if not text or len(text) < 2:
+            continue
+
+        # 삭제/차단 댓글 스킵
+        skip_words = ["삭제된 댓글", "차단된", "운영 원칙", "블라인드", "삭제되었습니다"]
+        if any(w in text for w in skip_words):
+            continue
+
+        if len(text) > 200:
+            text = text[:200] + "..."
+
+        # 추천수 추출
+        likes = 0
+        if likes_sel:
+            likes_el = item.select_one(likes_sel)
+            if likes_el:
+                m = re.search(r"\d+", likes_el.get_text(strip=True))
+                likes = int(m.group()) if m else 0
+
+        # 중복 댓글 스킵
+        if any(c["text"] == text for c in comments):
+            continue
+
+        comments.append({"text": text, "likes": likes})
+
+        if len(comments) >= max_count * 2:
+            break
+
+    # 추천수 기준 정렬 후 상위 N개
+    comments.sort(key=lambda x: x["likes"], reverse=True)
+    return comments[:max_count]
+
+
+def fetch_detail_content(url: str, content_selector: str, encoding: str = None,
+                         comment_sel: str = None, comment_text_sel: str = None,
+                         comment_likes_sel: str = None) -> dict:
+    result = {"content": "", "summary": "", "image_urls": [], "top_comments": []}
     try:
         res = requests.get(url, headers=HEADERS, timeout=10)
         if encoding:
@@ -127,6 +177,13 @@ def fetch_detail_content(url: str, content_selector: str, encoding: str = None) 
                 result["image_urls"].append(src)
         result["content"] = sanitize_html(content, url)
         result["summary"] = extract_text_summary(content)
+
+        # 댓글 추출
+        if comment_sel:
+            result["top_comments"] = extract_top_comments(
+                soup, comment_sel, comment_text_sel, comment_likes_sel
+            )
+
         return result
     except Exception as e:
         print(f"  상세 페이지 수집 오류 ({url}): {e}")
@@ -245,6 +302,14 @@ def crawl_fmkorea(period="daily", category="humor", url_map=None):
                     content = sanitize_html(content_el, data["href"])
                     summary = extract_text_summary(content_el)
 
+                # 에펨코리아 댓글 추출 (Selenium 렌더링 후)
+                top_comments = extract_top_comments(
+                    soup,
+                    comment_sel=".comment-item",
+                    text_sel=".xe_content",
+                    likes_sel=".count",
+                )
+
                 side_el = soup.select_one(".side.fr") or soup.select_one(".btm_area")
                 if side_el:
                     side_text = side_el.get_text(strip=True)
@@ -267,6 +332,7 @@ def crawl_fmkorea(period="daily", category="humor", url_map=None):
                     "image_urls": image_urls, "content": content, "summary": summary,
                     "view_count": view_count, "comment_count": data["comment_count"],
                     "like_count": like_count,
+                    "top_comments": top_comments,
                     "crawled_at": datetime.utcnow().isoformat(),
                 })
             except Exception as e:
@@ -284,6 +350,43 @@ def crawl_fmkorea(period="daily", category="humor", url_map=None):
 # -----------------------------------------
 # 2. 디시인사이드
 # -----------------------------------------
+def fetch_dcinside_comments(gall_id, doc_no, max_count=5):
+    """디시인사이드 댓글 API로 댓글 수집 (AJAX 로드)"""
+    comments = []
+    try:
+        api_url = f"https://gall.dcinside.com/board/comment_page?id={gall_id}&no={doc_no}&cmt_id={gall_id}&page=1"
+        headers = {
+            **HEADERS,
+            "Referer": f"https://gall.dcinside.com/board/view/?id={gall_id}&no={doc_no}",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+        res = requests.get(api_url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        items = soup.select("li")
+        for item in items:
+            txt_el = item.select_one(".usertxt")
+            if not txt_el:
+                continue
+            text = txt_el.get_text(strip=True)
+            if not text or len(text) < 2:
+                continue
+            skip_words = ["삭제된 댓글", "차단된", "블라인드", "삭제되었습니다"]
+            if any(w in text for w in skip_words):
+                continue
+            if len(text) > 200:
+                text = text[:200] + "..."
+            likes = 0
+            up_el = item.select_one(".up_num")
+            if up_el:
+                m = re.search(r"\d+", up_el.get_text(strip=True))
+                likes = int(m.group()) if m else 0
+            comments.append({"text": text, "likes": likes})
+        comments.sort(key=lambda x: x["likes"], reverse=True)
+    except Exception as e:
+        print(f"  디시 댓글 API 오류: {e}")
+    return comments[:max_count]
+
+
 DCINSIDE_URLS = {
     "daily":    "https://gall.dcinside.com/board/lists/?id=dcbest&page=1",
     "weekly":   "https://gall.dcinside.com/board/lists/?id=dcbest&page=1",
@@ -348,6 +451,11 @@ def crawl_dcinside(period="daily"):
             detail = fetch_detail_content(link, ".writing_view_box")
             time.sleep(1)
 
+            # 디시인사이드 댓글은 AJAX 로드 -> API로 별도 수집
+            gall_id_match = re.search(r"[?&]id=([^&]+)", link)
+            gall_id = gall_id_match.group(1) if gall_id_match else "dcbest"
+            top_comments = fetch_dcinside_comments(gall_id, doc_id)
+
             thumbnail_url = detail["image_urls"][0] if detail["image_urls"] else None
 
             posts.append({
@@ -360,6 +468,7 @@ def crawl_dcinside(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": view_count, "comment_count": comment_count,
                 "like_count": like_count,
+                "top_comments": top_comments,
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:
@@ -411,7 +520,12 @@ def crawl_ruliweb(period="daily"):
             like_el = item.select_one(".col_recomd")
             like_count = int(like_el.get_text(strip=True).replace(",", "")) if like_el else 0
 
-            detail = fetch_detail_content(link, ".view_content")
+            detail = fetch_detail_content(
+                link, ".view_content",
+                comment_sel=".comment_element",
+                comment_text_sel=".text",
+                comment_likes_sel=".btn_like .num",
+            )
             time.sleep(1)
 
             thumbnail_url = detail["image_urls"][0] if detail["image_urls"] else None
@@ -426,6 +540,7 @@ def crawl_ruliweb(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": view_count, "comment_count": 0,
                 "like_count": like_count,
+                "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:
@@ -499,6 +614,7 @@ def crawl_bobaedream(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": view_count, "comment_count": comment_count,
                 "like_count": like_count,
+                "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:
@@ -567,7 +683,12 @@ def crawl_dogdrip(period="daily"):
                 if thumbnail_url and thumbnail_url.startswith("/"):
                     thumbnail_url = "https://www.dogdrip.net" + thumbnail_url
 
-            detail = fetch_detail_content(link, ".xe_content")
+            detail = fetch_detail_content(
+                link, ".xe_content",
+                comment_sel=".comment-item",
+                comment_text_sel=".xe_content",
+                comment_likes_sel=".count",
+            )
             time.sleep(1)
 
             posts.append({
@@ -580,6 +701,7 @@ def crawl_dogdrip(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": 0, "comment_count": comment_count,
                 "like_count": like_count,
+                "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:
@@ -666,6 +788,7 @@ def crawl_clien(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": view_count, "comment_count": comment_count,
                 "like_count": like_count,
+                "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:
@@ -742,7 +865,12 @@ def crawl_ppomppu(period="daily"):
                 comment_count = int(m.group()) if m else 0
 
             detail_url = link.replace("zboard.php", "view.php")
-            detail = fetch_detail_content(detail_url, "td.han", encoding="euc-kr")
+            detail = fetch_detail_content(
+                detail_url, "td.han", encoding="euc-kr",
+                comment_sel=".comment_line",
+                comment_text_sel=".ori_comment",
+                comment_likes_sel=None,
+            )
             time.sleep(1)
 
             if not thumbnail_url and detail["image_urls"]:
@@ -758,6 +886,7 @@ def crawl_ppomppu(period="daily"):
                 "content": detail["content"], "summary": detail["summary"],
                 "view_count": view_count, "comment_count": comment_count,
                 "like_count": like_count,
+                "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
             })
         except Exception as e:

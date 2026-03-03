@@ -240,6 +240,40 @@ export default async function PostDetail({
         </div>
       )}
 
+      {/* 커뮤니티 반응 (댓글) */}
+      {post.top_comments && post.top_comments.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">
+            커뮤니티 반응
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {post.source_name} 이용자들의 주요 댓글 반응입니다.
+          </p>
+          <div className="space-y-2">
+            {post.top_comments.map((comment, i) => (
+              <div
+                key={i}
+                className="flex gap-3 items-start bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"
+              >
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-300">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                    {comment.text}
+                  </p>
+                  {comment.likes > 0 && (
+                    <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 inline-block">
+                      추천 {comment.likes}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 출처 및 큐레이션 안내 */}
       <div className="mt-6 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4 text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p>
