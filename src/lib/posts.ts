@@ -47,7 +47,7 @@ export function getPostsByCategory(category: string): Post[] {
     })
     .sort(
       (a, b) =>
-        (b.view_count + b.like_count * 10) - (a.view_count + a.like_count * 10)
+        new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime()
     );
 }
 
@@ -57,7 +57,7 @@ export function getPostsByPeriod(period: string): Post[] {
     .filter((p) => p.period === period)
     .sort(
       (a, b) =>
-        (b.view_count + b.like_count * 10) - (a.view_count + a.like_count * 10)
+        new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime()
     );
 }
 

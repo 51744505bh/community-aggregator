@@ -27,6 +27,9 @@ function sanitizeHtml(html: string): string {
   html = html.replace(/href\s*=\s*'javascript:[^']*'/gi, "href='#'");
   html = html.replace(/src\s*=\s*'javascript:[^']*'/gi, "");
 
+  // 에펨코리아 serverLog 등 불필요한 텍스트 제거
+  html = html.replace(/serverLog[:\s]*\w*\s*__LAZY__/gi, "");
+
   return html;
 }
 
