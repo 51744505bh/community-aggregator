@@ -351,37 +351,36 @@ def crawl_fmkorea(period="daily", category="humor", url_map=None):
 # 2. 디시인사이드
 # -----------------------------------------
 def fetch_dcinside_comments(gall_id, doc_no, max_count=5):
-    """디시인사이드 댓글 API로 댓글 수집 (AJAX 로드)"""
+    """디시인사이드 모바일 API로 댓글 수집"""
     comments = []
     try:
-        api_url = f"https://gall.dcinside.com/board/comment_page?id={gall_id}&no={doc_no}&cmt_id={gall_id}&page=1"
+        api_url = "https://m.dcinside.com/ajax/response-comment"
         headers = {
-            **HEADERS,
-            "Referer": f"https://gall.dcinside.com/board/view/?id={gall_id}&no={doc_no}",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+            "Referer": "https://m.dcinside.com/",
             "X-Requested-With": "XMLHttpRequest",
         }
-        res = requests.get(api_url, headers=headers, timeout=10)
+        data = {"id": gall_id, "no": str(doc_no), "cpage": "1", "csort": "", "del_scope": ""}
+        res = requests.post(api_url, headers=headers, data=data, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
-        items = soup.select("li")
+        items = soup.select("li.comment")
+        seen_texts = set()
         for item in items:
-            txt_el = item.select_one(".usertxt")
+            txt_el = item.select_one("p.txt")
             if not txt_el:
                 continue
             text = txt_el.get_text(strip=True)
-            if not text or len(text) < 2:
+            if not text or len(text) < 3:
                 continue
             skip_words = ["삭제된 댓글", "차단된", "블라인드", "삭제되었습니다"]
             if any(w in text for w in skip_words):
                 continue
+            if text in seen_texts:
+                continue
+            seen_texts.add(text)
             if len(text) > 200:
                 text = text[:200] + "..."
-            likes = 0
-            up_el = item.select_one(".up_num")
-            if up_el:
-                m = re.search(r"\d+", up_el.get_text(strip=True))
-                likes = int(m.group()) if m else 0
-            comments.append({"text": text, "likes": likes})
-        comments.sort(key=lambda x: x["likes"], reverse=True)
+            comments.append({"text": text, "likes": 0})
     except Exception as e:
         print(f"  디시 댓글 API 오류: {e}")
     return comments[:max_count]
@@ -773,7 +772,12 @@ def crawl_clien(period="daily"):
                 m = re.search(r"\d+", symph_el.get_text(strip=True))
                 like_count = int(m.group()) if m else 0
 
-            detail = fetch_detail_content(link, "div.post_article")
+            detail = fetch_detail_content(
+                link, "div.post_article",
+                comment_sel=".comment_row",
+                comment_text_sel=".comment_content",
+                comment_likes_sel=".comment_symph",
+            )
             time.sleep(1)
 
             thumbnail_url = detail["image_urls"][0] if detail["image_urls"] else None
