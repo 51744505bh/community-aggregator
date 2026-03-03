@@ -1,4 +1,4 @@
-import { getPostById, sourceColors } from "@/lib/posts";
+import { getPostById, getRelatedPosts, sourceColors } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
 import ViewCounter from "@/components/ViewCounter";
 import Link from "next/link";
@@ -161,6 +161,48 @@ export default async function PostDetail({
       </div>
 
       <AdBanner type="coupang" />
+
+      {/* 관련 게시글 추천 */}
+      <RelatedPosts currentId={post.id} category={post.category} />
     </article>
+  );
+}
+
+function RelatedPosts({ currentId, category }: { currentId: string; category: string }) {
+  const related = getRelatedPosts(currentId, category, 6);
+  if (related.length === 0) return null;
+
+  return (
+    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">추천 게시글</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {related.map((p) => {
+          const color = sourceColors[p.source] || "bg-gray-100 text-gray-700";
+          return (
+            <Link
+              key={p.id}
+              href={`/post/${p.id}`}
+              className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              {p.thumbnail_url && (
+                <img
+                  src={needsProxy(p.thumbnail_url) ? `/api/image?url=${encodeURIComponent(p.thumbnail_url)}` : p.thumbnail_url}
+                  referrerPolicy={needsProxy(p.thumbnail_url) ? undefined : "no-referrer"}
+                  alt=""
+                  className="w-20 h-14 object-cover rounded flex-shrink-0"
+                  loading="lazy"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{p.title}</p>
+                <span className={`${color} px-1.5 py-0.5 rounded text-[10px] font-medium mt-1 inline-block`}>
+                  {p.source_name}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }

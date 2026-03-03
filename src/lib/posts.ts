@@ -91,6 +91,38 @@ export function getPostsSortedByRecent(): Post[] {
   );
 }
 
+export function getRelatedPosts(currentId: string, category: string, count: number = 6): Post[] {
+  const posts = getPosts();
+  const seen = new Set<string>([currentId]);
+  const related: Post[] = [];
+
+  // 같은 카테고리에서 최신글 우선
+  const sameCat = posts
+    .filter((p) => p.category === category && p.id !== currentId)
+    .sort((a, b) => new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime());
+
+  for (const p of sameCat) {
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    related.push(p);
+    if (related.length >= count) return related;
+  }
+
+  // 부족하면 다른 카테고리에서 채우기
+  const others = posts
+    .filter((p) => p.id !== currentId && !seen.has(p.id))
+    .sort((a, b) => new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime());
+
+  for (const p of others) {
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    related.push(p);
+    if (related.length >= count) break;
+  }
+
+  return related;
+}
+
 export const categoryMap: Record<string, string> = {
   humor: "유머",
   issue: "이슈",
