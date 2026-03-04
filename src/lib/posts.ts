@@ -62,10 +62,8 @@ export function getPostsByPeriod(period: string): Post[] {
 
   let filtered = posts.filter((p) => p.period === period);
 
-  // 주간/월간 베스트에서 정보글(info) 제외
-  if (period === "weekly" || period === "monthly") {
-    filtered = filtered.filter((p) => p.category !== "info");
-  }
+  // 베스트 탭(실시간/주간/월간)에서 정보글(info) 제외 — 정보/꿀팁 탭에서 별도 노출
+  filtered = filtered.filter((p) => p.category !== "info");
 
   // 월간에서 주간과 중복되는 글 제외
   if (period === "monthly") {
