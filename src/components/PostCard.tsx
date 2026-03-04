@@ -52,7 +52,7 @@ export default function PostCard({ post }: { post: Post }) {
             </p>
           )}
           <div className="flex gap-3 text-xs text-gray-400 dark:text-gray-500">
-            <span>조회 {post.view_count.toLocaleString()}</span>
+            {post.view_count > 0 && <span>조회 {post.view_count.toLocaleString()}</span>}
             <span>추천 {post.like_count.toLocaleString()}</span>
             <span>댓글 {post.comment_count.toLocaleString()}</span>
           </div>
