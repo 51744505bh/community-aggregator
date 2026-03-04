@@ -59,8 +59,30 @@ export function getPostsByCategory(category: string): Post[] {
 
 export function getPostsByPeriod(period: string): Post[] {
   const posts = getPosts();
-  return posts
-    .filter((p) => p.period === period)
+
+  let filtered = posts.filter((p) => p.period === period);
+
+  // 주간/월간 베스트에서 정보글(info) 제외
+  if (period === "weekly" || period === "monthly") {
+    filtered = filtered.filter((p) => p.category !== "info");
+  }
+
+  // 월간에서 주간과 중복되는 글 제외
+  if (period === "monthly") {
+    const weeklyIds = new Set(
+      posts.filter((p) => p.period === "weekly").map((p) => p.id)
+    );
+    filtered = filtered.filter((p) => !weeklyIds.has(p.id));
+  }
+
+  // 중복 ID 제거
+  const seen = new Set<string>();
+  return filtered
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
     .sort(
       (a, b) =>
         new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime()

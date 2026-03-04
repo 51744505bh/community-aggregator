@@ -968,7 +968,7 @@ def main():
         ("루리웹", crawl_ruliweb, True),
         ("보배드림", crawl_bobaedream, False),
         ("도그드립", crawl_dogdrip, True),
-        ("클리앙", crawl_clien, True),
+        ("클리앙", crawl_clien, False),
         ("뽐뿌", crawl_ppomppu, False),
     ]
 
