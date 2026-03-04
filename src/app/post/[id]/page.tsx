@@ -2,6 +2,8 @@ import { getPostById, getRelatedPosts, sourceColors, categoryMap } from "@/lib/p
 import type { Post } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
 import ViewCounter from "@/components/ViewCounter";
+import LikeButton from "@/components/LikeButton";
+import CommentSection from "@/components/CommentSection";
 import Link from "next/link";
 
 function sanitizeHtml(html: string): string {
@@ -198,6 +200,7 @@ export default async function PostDetail({
         <ViewCounter postId={post.id} />
         <span>추천 {post.like_count.toLocaleString()}</span>
         <span>댓글 {post.comment_count.toLocaleString()}</span>
+        <LikeButton postId={post.id} />
       </div>
 
       {/* 큐레이션 소개 */}
@@ -273,6 +276,9 @@ export default async function PostDetail({
           </div>
         </div>
       )}
+
+      {/* 사이트 댓글 */}
+      <CommentSection postId={post.id} />
 
       {/* 출처 및 큐레이션 안내 */}
       <div className="mt-6 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4 text-xs text-gray-500 dark:text-gray-400 space-y-1">
