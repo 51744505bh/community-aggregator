@@ -121,9 +121,21 @@ def extract_top_comments(soup, comment_sel, text_sel=None, likes_sel=None, max_c
         # 댓글 텍스트 추출
         if text_sel:
             text_el = item.select_one(text_sel)
-            text = text_el.get_text(strip=True) if text_el else ""
+            if not text_el:
+                continue
+            # 내부 HTML을 다시 파싱해서 순수 텍스트 추출
+            inner = text_el.decode_contents()
+            inner_soup = BeautifulSoup(inner, "html.parser")
+            text = inner_soup.get_text(separator=" ", strip=True)
         else:
             text = item.get_text(strip=True)
+
+        # 잔여 HTML 태그 제거
+        text = re.sub(r"<[^>]+>", "", text).strip()
+        # @닉네임 멘션 제거
+        text = re.sub(r"@\S+", "", text).strip()
+        # 디시 앱 태그 제거
+        text = re.sub(r"\s*-\s*dc\s*App\s*$", "", text).strip()
 
         if not text or len(text) < 2:
             continue
@@ -370,6 +382,8 @@ def fetch_dcinside_comments(gall_id, doc_no, max_count=5):
             if not txt_el:
                 continue
             text = txt_el.get_text(strip=True)
+            # "- dc App" 태그 제거
+            text = re.sub(r"\s*-\s*dc\s*App\s*$", "", text).strip()
             if not text or len(text) < 3:
                 continue
             skip_words = ["삭제된 댓글", "차단된", "블라인드", "삭제되었습니다"]
