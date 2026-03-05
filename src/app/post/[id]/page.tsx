@@ -3,6 +3,7 @@ import type { Post } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
 import ViewCounter from "@/components/ViewCounter";
 import LikeButton from "@/components/LikeButton";
+import ShareButton from "@/components/ShareButton";
 import CommentSection from "@/components/CommentSection";
 import Link from "next/link";
 
@@ -201,6 +202,7 @@ export default async function PostDetail({
         <span>추천 {post.like_count.toLocaleString()}</span>
         <span>댓글 {post.comment_count.toLocaleString()}</span>
         <LikeButton postId={post.id} />
+        <ShareButton postId={post.id} />
       </div>
 
       {/* 큐레이션 소개 */}
