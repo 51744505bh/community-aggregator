@@ -527,11 +527,21 @@ def crawl_ruliweb(period="daily"):
             id_match = re.search(r"/read/(\d+)", link)
             doc_id = id_match.group(1) if id_match else link.split("/")[-1].split("?")[0]
 
-            view_el = item.select_one(".col_view")
+            view_el = item.select_one("td.hit")
             view_count = int(view_el.get_text(strip=True).replace(",", "")) if view_el else 0
 
-            like_el = item.select_one(".col_recomd")
+            like_el = item.select_one("td.recomd")
             like_count = int(like_el.get_text(strip=True).replace(",", "")) if like_el else 0
+
+            # 댓글 수: 제목 뒤 (숫자) 패턴에서 추출
+            comment_count = 0
+            comment_match = re.search(r"\((\d+)\)\s*$", title)
+            if comment_match:
+                comment_count = int(comment_match.group(1))
+                title = re.sub(r"\s*\(\d+\)\s*$", "", title)
+
+            # 제목 앞 순위 숫자 제거 (예: "1소주 싫어하는..." → "소주 싫어하는...")
+            title = re.sub(r"^\d+", "", title).strip()
 
             detail = fetch_detail_content(
                 link, ".view_content",
@@ -551,7 +561,7 @@ def crawl_ruliweb(period="daily"):
                 "thumbnail_url": thumbnail_url,
                 "image_urls": detail["image_urls"],
                 "content": detail["content"], "summary": detail["summary"],
-                "view_count": view_count, "comment_count": 0,
+                "view_count": view_count, "comment_count": comment_count,
                 "like_count": like_count,
                 "top_comments": detail.get("top_comments", []),
                 "crawled_at": datetime.utcnow().isoformat(),
