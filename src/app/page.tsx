@@ -133,11 +133,12 @@ function FeedItem({ post }: { post: Post }) {
 }
 
 export default function Home() {
-  const heroPost = getSafePosts(getTopPostsByCategory("humor", 5))[0] || getSafePosts(getRecentPosts(5))[0];
-  const humorPicks = getSafePosts(getTopPostsByCategory("humor", 10)).filter((p) => p.id !== heroPost?.id).slice(0, 4);
+  const allSafe = getSafePosts(getRecentPosts(30));
+  const heroPost = allSafe[0];
   const infoPicks = getSafePosts(getTopPostsByCategory("info", 8)).slice(0, 4);
   const issuePicks = getSafePosts(getTopPostsByCategory("issue", 6)).slice(0, 3);
-  const recentFeed = getSafePosts(getRecentPosts(20)).slice(0, 10);
+  const humorPicks = getSafePosts(getTopPostsByCategory("humor", 10)).filter((p) => p.id !== heroPost?.id).slice(0, 4);
+  const recentFeed = allSafe.slice(1, 11);
   const trendingKeywords = getTrendingKeywords(8);
 
   return (
@@ -167,26 +168,7 @@ export default function Home() {
         </section>
       )}
 
-      <AdBanner type="adsense" />
-
-      {/* 유머 Picks */}
-      {humorPicks.length > 0 && (
-        <section className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900 dark:text-white">유머 Picks</h2>
-            <Link href="/humor" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-              더보기 &rarr;
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {humorPicks.map((post) => (
-              <SmallCard key={post.id} post={post} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 정보/꿀팁 */}
+      {/* 정보/꿀팁 — 광고 친화 섹션 우선 */}
       {infoPicks.length > 0 && (
         <section className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -202,6 +184,8 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <AdBanner type="adsense" />
 
       {/* 이슈 해설 */}
       {issuePicks.length > 0 && (
@@ -220,27 +204,29 @@ export default function Home() {
         </section>
       )}
 
-      {/* 가성비/추천 준비 중 */}
-      <section className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">가성비/추천</h2>
-          <Link href="/guide" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-            더보기 &rarr;
-          </Link>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            커뮤니티에서 반응 좋은 추천 가이드를 준비 중입니다.
-          </p>
-        </div>
-      </section>
+      {/* 유머 Picks */}
+      {humorPicks.length > 0 && (
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">유머 Picks</h2>
+            <Link href="/humor" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+              더보기 &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {humorPicks.map((post) => (
+              <SmallCard key={post.id} post={post} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <AdBanner type="coupang" />
 
-      {/* 실시간 피드 미리보기 */}
+      {/* 실시간 원문 탐색 */}
       <section className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">실시간 커뮤니티</h2>
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">실시간 원문 탐색</h2>
           <Link href="/live" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
             전체보기 &rarr;
           </Link>

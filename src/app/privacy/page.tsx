@@ -4,7 +4,7 @@ export default function PrivacyPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">개인정보처리방침</h1>
       <div className="text-gray-700 dark:text-gray-300 space-y-4 text-sm leading-relaxed">
         <p>
-          커뮤니티 인기글(이하 &ldquo;서비스&rdquo;)은 이용자의 개인정보를 중요시하며,
+          Dripszone(이하 &ldquo;서비스&rdquo;)은 이용자의 개인정보를 중요시하며,
           관련 법령을 준수합니다.
         </p>
 

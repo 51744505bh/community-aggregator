@@ -1,4 +1,4 @@
-import { getPostsByCategory } from "@/lib/posts";
+import { getPostsByCategory, getSafePosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdBanner from "@/components/AdBanner";
 import Pagination, { paginate } from "@/components/Pagination";
@@ -17,7 +17,7 @@ export default async function HumorPage({
 }) {
   const { page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
-  const allPosts = getPostsByCategory("humor");
+  const allPosts = getSafePosts(getPostsByCategory("humor"));
   const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (

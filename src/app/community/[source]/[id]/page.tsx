@@ -1,4 +1,4 @@
-import { getPostById, getRelatedPosts, sourceColors, categoryMap, getCommunityUrl } from "@/lib/posts";
+import { getPostById, getRelatedPosts, sourceColors, categoryMap, getCommunityUrl, cleanCommentText, cleanSummaryText } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import ViewCounter from "@/components/ViewCounter";
 import LikeButton from "@/components/LikeButton";
@@ -182,7 +182,7 @@ export default async function CommunityPostPage({
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
         <h2 className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-1">10초 요약</h2>
         <p className="text-sm text-blue-700 dark:text-blue-200 leading-relaxed">
-          {post.summary || `${post.source_name}의 ${catName} 게시판에서 ${dateStr}에 화제가 된 게시물입니다.`}
+          {post.summary ? cleanSummaryText(post.summary) : `${post.source_name}의 ${catName} 게시판에서 ${dateStr}에 화제가 된 게시물입니다.`}
         </p>
       </div>
 
@@ -230,7 +230,7 @@ export default async function CommunityPostPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
-                    {comment.text}
+                    {cleanCommentText(comment.text)}
                   </p>
                   {comment.likes > 0 && (
                     <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 inline-block">

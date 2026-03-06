@@ -205,6 +205,73 @@ export function getSafePosts(posts: Post[]): Post[] {
   return posts.filter((p) => !isSensitivePost(p));
 }
 
+const POLITICAL_PATTERNS = [
+  /정치/,
+  /국회/,
+  /대통령/,
+  /여당/,
+  /야당/,
+  /민주당/,
+  /국민의힘/,
+  /좌파/,
+  /우파/,
+  /진보/,
+  /보수/,
+  /탄핵/,
+  /시위/,
+  /폭동/,
+  /집회/,
+  /검찰/,
+  /수사/,
+  /구속/,
+  /기소/,
+  /논란/,
+  /갈등/,
+  /혐오/,
+  /차별/,
+  /페미/,
+];
+
+export function isPoliticalPost(post: Post): boolean {
+  const text = post.title;
+  return POLITICAL_PATTERNS.some((re) => re.test(text));
+}
+
+export function getInfoSafePosts(posts: Post[]): Post[] {
+  return posts.filter((p) => !isSensitivePost(p) && !isPoliticalPost(p));
+}
+
+const PROFANITY_PATTERNS = [
+  /시발/g, /씨발/g, /ㅅㅂ/g, /ㅆㅂ/g,
+  /병신/g, /ㅂㅅ/g, /ㅄ/g,
+  /지랄/g, /ㅈㄹ/g,
+  /좆/g, /ㅈㄴ/g,
+  /새끼/g, /ㅅㄲ/g,
+  /개같/g, /개새/g, /개씹/g,
+  /느금마/g, /느금/g, /니미/g, /니엄/g,
+  /한남/g, /한녀/g,
+  /틀딱/g, /꼰대/g,
+  /ㅂㅊ/g, /보추/g,
+  /찐따/g, /엠창/g,
+];
+
+export function cleanCommentText(text: string): string {
+  let cleaned = text;
+  for (const pattern of PROFANITY_PATTERNS) {
+    cleaned = cleaned.replace(pattern, "***");
+  }
+  return cleaned;
+}
+
+export function cleanSummaryText(summary: string): string {
+  let s = summary;
+  // URL 제거
+  s = s.replace(/https?:\/\/[^\s)]+/g, "");
+  // 연속 공백 정리
+  s = s.replace(/\s{2,}/g, " ").trim();
+  return s;
+}
+
 export function parsePostId(id: string): { source: string; rawId: string } {
   const idx = id.indexOf("_");
   if (idx === -1) return { source: "", rawId: id };
