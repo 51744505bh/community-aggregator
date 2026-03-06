@@ -1,6 +1,12 @@
 import { searchPosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import Pagination, { paginate } from "@/components/Pagination";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "검색 - Dripszone",
+  robots: { index: false, follow: true },
+};
 
 export default async function SearchPage({
   searchParams,

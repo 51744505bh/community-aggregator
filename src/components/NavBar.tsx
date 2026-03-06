@@ -5,12 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 const navItems = [
-  { label: "실시간 베스트", href: "/" },
-  { label: "주간 베스트", href: "/weekly" },
-  { label: "월간 베스트", href: "/monthly" },
-  { label: "이슈", href: "/category/issue" },
-  { label: "유머", href: "/category/humor" },
-  { label: "정보/꿀팁", href: "/category/info" },
+  { label: "실시간", href: "/live" },
+  { label: "오늘의 정리", href: "/today" },
+  { label: "유머", href: "/humor" },
+  { label: "정보/꿀팁", href: "/info" },
+  { label: "이슈 해설", href: "/issue" },
+  { label: "가성비/추천", href: "/guide" },
 ];
 
 export default function NavBar() {
@@ -56,7 +56,7 @@ export default function NavBar() {
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-            커뮤니티 인기글
+            Dripszone
           </Link>
           <div className="flex items-center gap-2">
             {/* 검색 토글 */}
@@ -104,7 +104,7 @@ export default function NavBar() {
 
         <nav className="flex gap-1 overflow-x-auto pb-2 -mb-px scrollbar-hide">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}

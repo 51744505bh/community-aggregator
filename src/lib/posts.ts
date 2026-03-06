@@ -164,3 +164,69 @@ export const sourceColors: Record<string, string> = {
   clien: "bg-teal-100 text-teal-700",
   ppomppu: "bg-red-100 text-red-700",
 };
+
+export function parsePostId(id: string): { source: string; rawId: string } {
+  const idx = id.indexOf("_");
+  if (idx === -1) return { source: "", rawId: id };
+  return { source: id.substring(0, idx), rawId: id.substring(idx + 1) };
+}
+
+export function getCommunityUrl(post: Post): string {
+  const { source, rawId } = parsePostId(post.id);
+  return `/community/${source}/${rawId}`;
+}
+
+export function getTopPostsByCategory(category: string, count: number): Post[] {
+  const posts = getPosts();
+  const seen = new Set<string>();
+  return posts
+    .filter((p) => p.category === category)
+    .sort((a, b) => {
+      const scoreA = a.view_count + a.like_count * 10 + a.comment_count * 5;
+      const scoreB = b.view_count + b.like_count * 10 + b.comment_count * 5;
+      return scoreB - scoreA;
+    })
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .slice(0, count);
+}
+
+export function getRecentPosts(count: number): Post[] {
+  const posts = getPosts();
+  const seen = new Set<string>();
+  return posts
+    .sort((a, b) => new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime())
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .slice(0, count);
+}
+
+export function getTrendingKeywords(count: number = 10): string[] {
+  const posts = getPosts();
+  const recent = posts
+    .sort((a, b) => new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime())
+    .slice(0, 100);
+
+  const wordCount = new Map<string, number>();
+  for (const p of recent) {
+    const words = p.title
+      .replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter((w) => w.length >= 2);
+    for (const w of words) {
+      wordCount.set(w, (wordCount.get(w) || 0) + 1);
+    }
+  }
+
+  return Array.from(wordCount.entries())
+    .filter(([, c]) => c >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, count)
+    .map(([w]) => w);
+}
