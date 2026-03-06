@@ -25,11 +25,22 @@ export interface Post {
   crawled_at: string;
 }
 
+const VIDEO_NOISE_RE = /Video\s*Player\s*Video\s*태그를\s*지원하지\s*않는\s*브라우저입니다[\s\S]*?(?:0\.25x|$)/gi;
+const VIDEO_NOISE_SHORT_RE = /Video\s*태그를\s*지원하지\s*않는\s*브라우저입니다[.\s]*/gi;
+
+function cleanSummary(s: string): string {
+  return s.replace(VIDEO_NOISE_RE, "").replace(VIDEO_NOISE_SHORT_RE, "").replace(/^[\s.]+/, "").trim();
+}
+
 export function getPosts(): Post[] {
   const filePath = path.join(process.cwd(), "public", "data", "posts.json");
   try {
     const data = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(data);
+    const posts: Post[] = JSON.parse(data);
+    for (const p of posts) {
+      if (p.summary) p.summary = cleanSummary(p.summary);
+    }
+    return posts;
   } catch {
     return [];
   }
