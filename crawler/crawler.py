@@ -17,6 +17,51 @@ HEADERS = {
 TOP_N = 10
 
 
+# -----------------------------------------
+# 키워드 기반 카테고리 자동 분류
+# -----------------------------------------
+INFO_KEYWORDS = [
+    "꿀팁", "팁", "방법", "하는법", "만들기", "추천", "비교", "리뷰",
+    "가이드", "사용법", "설정", "정리", "요약", "노하우", "절약",
+    "레시피", "요리", "건강", "운동", "다이어트", "청소", "세탁",
+    "자취", "원룸", "이사", "인테리어", "수납", "정리정돈",
+    "앱", "어플", "프로그램", "사이트", "서비스",
+    "가성비", "가격", "할인", "세일", "쿠폰", "무료",
+    "여행", "맛집", "카페", "호텔", "항공",
+    "보험", "적금", "카드", "연말정산", "세금",
+    "반려", "강아지", "고양이", "펫",
+]
+
+ISSUE_KEYWORDS = [
+    "논란", "사건", "사고", "속보", "긴급", "충격",
+    "정치", "국회", "대통령", "선거", "여당", "야당",
+    "검찰", "경찰", "재판", "판결", "구속", "기소", "수사",
+    "시위", "집회", "폭동", "탄핵", "탈당",
+    "전쟁", "외교", "북한", "미국", "중국", "일본",
+    "갈등", "폭행", "살인", "범죄", "피해",
+    "규탄", "비판", "고발", "폭로",
+]
+
+def classify_category(title: str, summary: str = "") -> str:
+    """제목과 요약을 기반으로 humor/info/issue 카테고리 분류"""
+    text = (title + " " + summary).lower()
+
+    issue_score = sum(1 for kw in ISSUE_KEYWORDS if kw in text)
+    info_score = sum(1 for kw in INFO_KEYWORDS if kw in text)
+
+    if issue_score >= 2:
+        return "issue"
+    if info_score >= 2:
+        return "info"
+    if issue_score == 1 and info_score == 0:
+        return "issue"
+    if info_score == 1 and issue_score == 0:
+        return "info"
+
+    # 기본값: humor (커뮤니티 베스트 글은 대부분 유머/일상)
+    return "humor"
+
+
 def make_id(prefix: str, raw_id: str) -> str:
     """안전한 ID 생성 (특수문자 제거)"""
     clean = re.sub(r"[^a-zA-Z0-9_-]", "", str(raw_id))
@@ -471,10 +516,12 @@ def crawl_dcinside(period="daily"):
 
             thumbnail_url = detail["image_urls"][0] if detail["image_urls"] else None
 
+            detected_category = classify_category(title, detail.get("summary", ""))
+
             posts.append({
                 "id": make_id("dcinside", doc_id),
                 "source": "dcinside", "source_name": "디시인사이드",
-                "category": "issue", "period": period,
+                "category": detected_category, "period": period,
                 "title": title, "url": link,
                 "thumbnail_url": thumbnail_url,
                 "image_urls": detail["image_urls"],
@@ -627,10 +674,12 @@ def crawl_bobaedream(period="daily"):
 
             thumbnail_url = detail["image_urls"][0] if detail["image_urls"] else None
 
+            detected_category = classify_category(title, detail.get("summary", ""))
+
             posts.append({
                 "id": make_id("bobaedream", doc_id),
                 "source": "bobaedream", "source_name": "보배드림",
-                "category": "issue", "period": period,
+                "category": detected_category, "period": period,
                 "title": title, "url": link,
                 "thumbnail_url": thumbnail_url,
                 "image_urls": detail["image_urls"],
