@@ -65,6 +65,8 @@ function proxyMedia(html: string): string {
       return `<video${before}src="${r.src}"${r.attrs}${after}>`;
     }
   );
+  // video 폴백 텍스트 제거
+  html = html.replace(/<video([^>]*)>([\s\S]*?)<\/video>/gi, "<video$1></video>");
   return html;
 }
 
