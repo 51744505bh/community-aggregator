@@ -4,6 +4,7 @@ import {
   getTrendingKeywords,
   getCommunityUrl,
   sourceColors,
+  getSafePosts,
 } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import AdBanner from "@/components/AdBanner";
@@ -132,11 +133,11 @@ function FeedItem({ post }: { post: Post }) {
 }
 
 export default function Home() {
-  const heroPost = getTopPostsByCategory("humor", 1)[0] || getRecentPosts(1)[0];
-  const humorPicks = getTopPostsByCategory("humor", 5).filter((p) => p.id !== heroPost?.id).slice(0, 4);
-  const infoPicks = getTopPostsByCategory("info", 4);
-  const issuePicks = getTopPostsByCategory("issue", 3);
-  const recentFeed = getRecentPosts(10);
+  const heroPost = getSafePosts(getTopPostsByCategory("humor", 5))[0] || getSafePosts(getRecentPosts(5))[0];
+  const humorPicks = getSafePosts(getTopPostsByCategory("humor", 10)).filter((p) => p.id !== heroPost?.id).slice(0, 4);
+  const infoPicks = getSafePosts(getTopPostsByCategory("info", 8)).slice(0, 4);
+  const issuePicks = getSafePosts(getTopPostsByCategory("issue", 6)).slice(0, 3);
+  const recentFeed = getSafePosts(getRecentPosts(20)).slice(0, 10);
   const trendingKeywords = getTrendingKeywords(8);
 
   return (

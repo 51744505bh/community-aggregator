@@ -176,6 +176,35 @@ export const sourceColors: Record<string, string> = {
   ppomppu: "bg-red-100 text-red-700",
 };
 
+const SENSITIVE_PATTERNS = [
+  /ㅇㅎ/,
+  /후방/,
+  /19금/,
+  /성인/,
+  /야동/,
+  /노출/,
+  /섹스/,
+  /자살/,
+  /혐오/,
+  /살인/,
+  /시체/,
+  /고어/,
+  /패드립/,
+  /흉기/,
+  /강간/,
+  /몰카/,
+  /불법촬영/,
+];
+
+export function isSensitivePost(post: Post): boolean {
+  const text = post.title;
+  return SENSITIVE_PATTERNS.some((re) => re.test(text));
+}
+
+export function getSafePosts(posts: Post[]): Post[] {
+  return posts.filter((p) => !isSensitivePost(p));
+}
+
 export function parsePostId(id: string): { source: string; rawId: string } {
   const idx = id.indexOf("_");
   if (idx === -1) return { source: "", rawId: id };
