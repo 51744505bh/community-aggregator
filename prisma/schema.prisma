@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── 기존 테이블 (공개 사이트용) ───
+
+model daily_visitors {
+  visit_date    DateTime @id @default(dbgenerated("CURRENT_DATE")) @db.Date
+  visitor_count Int?     @default(0)
+}
+
+model post_comments {
+  id         Int      @id @default(autoincrement())
+  post_id    String
+  nickname   String   @default("익명")
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  ip_hash    String
+
+  @@index([ip_hash], map: "idx_post_comments_ip_hash")
+  @@index([post_id], map: "idx_post_comments_post_id")
+}
+
+model post_likes {
+  post_id     String
+  fingerprint String
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([post_id, fingerprint])
+}
+
+model post_views {
+  post_id    String @id
+  view_count Int?   @default(0)
+}
+
+// ─── Admin CMS 테이블 ───
+
+enum AdminRole {
+  OWNER
+  MANAGING_EDITOR
+  EDITOR
+  REVIEWER
+  AD_MANAGER
+}
+
+enum AdminStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+model AdminUser {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String?
+  role         AdminRole?
+  status       AdminStatus @default(PENDING)
+  authProvider String?     @map("auth_provider")
+  lastLoginAt  DateTime?   @map("last_login_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  invitesSent AdminInvite[]  @relation("InviteSender")
+  auditLogs   AdminAuditLog[]
+
+  @@map("admin_users")
+}
+
+model AdminInvite {
+  id              String    @id @default(cuid())
+  email           String
+  role            AdminRole
+  tokenHash       String    @unique @map("token_hash")
+  invitedByUserId String    @map("invited_by_user_id")
+  expiresAt       DateTime  @map("expires_at")
+  usedAt          DateTime? @map("used_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  invitedBy AdminUser @relation("InviteSender", fields: [invitedByUserId], references: [id])
+
+  @@index([email])
+  @@map("admin_invites")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  targetType  String?  @map("target_type")
+  targetId    String?  @map("target_id")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor AdminUser? @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
