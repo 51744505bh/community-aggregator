@@ -1,6 +1,7 @@
 import {
   getTopPostsByCategory,
   getRecentPosts,
+  getMixedRecentPosts,
   getTrendingKeywords,
   getCommunityUrl,
   sourceColors,
@@ -133,12 +134,12 @@ function FeedItem({ post }: { post: Post }) {
 }
 
 export default function Home() {
-  const allSafe = getSafePosts(getRecentPosts(30));
-  const heroPost = allSafe[0];
   const infoPicks = getSafePosts(getTopPostsByCategory("info", 8)).slice(0, 4);
   const issuePicks = getSafePosts(getTopPostsByCategory("issue", 6)).slice(0, 3);
-  const humorPicks = getSafePosts(getTopPostsByCategory("humor", 10)).filter((p) => p.id !== heroPost?.id).slice(0, 4);
-  const recentFeed = allSafe.slice(1, 11);
+  const humorPicks = getSafePosts(getTopPostsByCategory("humor", 10)).slice(0, 4);
+  const heroPost = infoPicks[0] || issuePicks[0] || humorPicks[0];
+  const usedIds = new Set([heroPost?.id, ...infoPicks.map(p => p.id), ...issuePicks.map(p => p.id), ...humorPicks.map(p => p.id)]);
+  const recentFeed = getSafePosts(getMixedRecentPosts(30)).filter(p => !usedIds.has(p.id)).slice(0, 10);
   const trendingKeywords = getTrendingKeywords(8);
 
   return (

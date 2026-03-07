@@ -1,4 +1,4 @@
-import { getPostsByPeriod } from "@/lib/posts";
+import { getMixedRecentPosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import Pagination, { paginate } from "@/components/Pagination";
 import type { Metadata } from "next";
@@ -16,7 +16,7 @@ export default async function LivePage({
 }) {
   const { page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
-  const allPosts = getPostsByPeriod("daily");
+  const allPosts = getMixedRecentPosts(100);
   const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (

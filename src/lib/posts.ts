@@ -314,6 +314,62 @@ export function getRecentPosts(count: number): Post[] {
     .slice(0, count);
 }
 
+export function getTopPostsByPopularity(count: number): Post[] {
+  const posts = getPosts();
+  const seen = new Set<string>();
+  return posts
+    .sort((a, b) => {
+      const scoreA = a.view_count + a.like_count * 10 + a.comment_count * 5;
+      const scoreB = b.view_count + b.like_count * 10 + b.comment_count * 5;
+      return scoreB - scoreA;
+    })
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .slice(0, count);
+}
+
+export function getMixedRecentPosts(count: number): Post[] {
+  const posts = getPosts();
+  const seen = new Set<string>();
+  const dedupe = posts
+    .sort((a, b) => new Date(b.crawled_at).getTime() - new Date(a.crawled_at).getTime())
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+
+  // 카테고리별 큐 준비
+  const queues: Record<string, Post[]> = {};
+  for (const p of dedupe) {
+    if (!queues[p.category]) queues[p.category] = [];
+    queues[p.category].push(p);
+  }
+
+  // 라운드로빈으로 카테고리 섞기
+  const categories = Object.keys(queues);
+  const result: Post[] = [];
+  const indices: Record<string, number> = {};
+  for (const cat of categories) indices[cat] = 0;
+
+  while (result.length < count) {
+    let added = false;
+    for (const cat of categories) {
+      if (indices[cat] < queues[cat].length && result.length < count) {
+        result.push(queues[cat][indices[cat]]);
+        indices[cat]++;
+        added = true;
+      }
+    }
+    if (!added) break;
+  }
+
+  return result;
+}
+
 export function getTrendingKeywords(count: number = 10): string[] {
   const posts = getPosts();
   const recent = posts
