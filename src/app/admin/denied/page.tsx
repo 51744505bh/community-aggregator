@@ -1,4 +1,3 @@
-import { signOut } from "@/lib/auth/auth";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -21,23 +20,16 @@ export default function AdminDeniedPage() {
         </p>
 
         <div className="space-y-3">
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/admin/login" });
-            }}
+          <Link
+            href="/admin/login"
+            className="block w-full bg-gray-700 text-white py-2.5 px-4 rounded-lg hover:bg-gray-600 transition-colors text-sm text-center"
           >
-            <button
-              type="submit"
-              className="w-full bg-gray-700 text-white py-2.5 px-4 rounded-lg hover:bg-gray-600 transition-colors text-sm"
-            >
-              다른 계정으로 로그인
-            </button>
-          </form>
+            다시 로그인
+          </Link>
 
           <Link
             href="/"
-            className="block w-full bg-gray-700/50 text-gray-400 py-2.5 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            className="block w-full bg-gray-700/50 text-gray-400 py-2.5 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm text-center"
           >
             홈으로 이동
           </Link>

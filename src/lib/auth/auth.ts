@@ -1,26 +1,57 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    Credentials({
+      credentials: {
+        email: { label: "이메일", type: "email" },
+        password: { label: "비밀번호", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = (credentials?.email as string)?.toLowerCase()?.trim();
+        const password = credentials?.password as string;
+        if (!email || !password) return null;
+
+        // 공용 비밀번호 확인
+        if (password !== process.env.ADMIN_PASSWORD) return null;
+
+        // DB에서 승인된 이메일 확인
+        const adminUser = await prisma.adminUser.findUnique({
+          where: { email },
+        });
+        if (!adminUser || adminUser.status !== "ACTIVE") return null;
+
+        // 로그인 시간 업데이트
+        await prisma.adminUser.update({
+          where: { email },
+          data: { lastLoginAt: new Date(), authProvider: "credentials" },
+        });
+
+        // 감사 로그
+        await prisma.adminAuditLog.create({
+          data: {
+            actorUserId: adminUser.id,
+            action: "login_success",
+          },
+        });
+
+        return {
+          id: adminUser.id,
+          email: adminUser.email,
+          name: adminUser.name,
+        };
+      },
     }),
   ],
-  // JWT 전략: DB 세션 테이블 불필요
   session: { strategy: "jwt" },
   pages: {
     signIn: "/admin/login",
     error: "/admin/login",
   },
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.provider = account.provider;
-      }
-      // admin_users 테이블에서 role/status 조회
+    async jwt({ token }) {
       if (token.email) {
         const adminUser = await prisma.adminUser.findUnique({
           where: { email: token.email.toLowerCase() },
@@ -38,42 +69,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.adminUserId = token.adminUserId as string | null;
       }
       return session;
-    },
-    async signIn({ user, account }) {
-      // OAuth 로그인 자체는 허용. /admin 접근 시 승인 여부 판단.
-      if (user.email && account) {
-        const email = user.email.toLowerCase();
-        const adminUser = await prisma.adminUser.findUnique({
-          where: { email },
-        });
-        if (adminUser) {
-          // 마지막 로그인 시간 업데이트
-          await prisma.adminUser.update({
-            where: { email },
-            data: {
-              lastLoginAt: new Date(),
-              authProvider: account.provider,
-              name: user.name || adminUser.name,
-            },
-          });
-          // 감사 로그
-          await prisma.adminAuditLog.create({
-            data: {
-              actorUserId: adminUser.id,
-              action: adminUser.status === "ACTIVE" ? "login_success" : "login_denied_inactive",
-            },
-          });
-        } else {
-          // 미등록 사용자 로그인 시도 기록
-          await prisma.adminAuditLog.create({
-            data: {
-              action: "login_denied_not_allowlisted",
-              metadata: { email },
-            },
-          });
-        }
-      }
-      return true;
     },
   },
 });
