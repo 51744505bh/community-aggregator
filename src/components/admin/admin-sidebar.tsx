@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "대시보드", icon: "H" },
+  { href: "/admin/projects", label: "프로젝트", icon: "P", ownerOnly: true },
   { href: "/admin/inbox", label: "수집함", icon: "I" },
   { href: "/admin/briefs", label: "브리프", icon: "B" },
   { href: "/admin/drafts", label: "초안", icon: "D" },
   { href: "/admin/review", label: "검수", icon: "R" },
-  { href: "/admin/publish", label: "발행", icon: "P" },
+  { href: "/admin/publish", label: "발행", icon: ">" },
   { href: "/admin/team", label: "팀 관리", icon: "T", ownerOnly: true },
   { href: "/admin/audit", label: "감사 로그", icon: "L" },
   { href: "/admin/settings", label: "설정", icon: "S", ownerOnly: true },

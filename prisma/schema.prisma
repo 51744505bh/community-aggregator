@@ -107,3 +107,68 @@ model AdminAuditLog {
   @@index([createdAt])
   @@map("admin_audit_logs")
 }
+
+// ─── 수익화 프로젝트 & 글 발행 ───
+
+enum ArticleType {
+  GUIDE
+  COMPARISON
+  TREND_ROUNDUP
+  ISSUE_BRIDGE
+  TOPIC_HUB
+}
+
+enum ArticleStatus {
+  DRAFT
+  NEEDS_EDIT
+  READY_TO_REVIEW
+  IN_REVIEW
+  READY_TO_PUBLISH
+  PUBLISHED
+  ARCHIVED
+}
+
+model Project {
+  id                   String   @id @default(cuid())
+  name                 String
+  slug                 String   @unique
+  description          String?
+  primaryMonetization  String?  @map("primary_monetization")
+  status               String   @default("active")
+  ownerUserId          String?  @map("owner_user_id")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  articles Article[]
+
+  @@map("projects")
+}
+
+model Article {
+  id                        String        @id @default(cuid())
+  projectId                 String?       @map("project_id")
+  articleType               ArticleType   @map("article_type")
+  title                     String
+  slug                      String        @unique
+  status                    ArticleStatus @default(DRAFT)
+  summary                   String?
+  bodyMd                    String        @map("body_md") @db.Text
+  faqMd                     String?       @map("faq_md") @db.Text
+  seoTitle                  String?       @map("seo_title")
+  metaDescription           String?       @map("meta_description")
+  ogImageUrl                String?       @map("og_image_url")
+  affiliateDisclosureEnabled Boolean      @default(false) @map("affiliate_disclosure_enabled")
+  authorUserId              String?       @map("author_user_id")
+  reviewerUserId            String?       @map("reviewer_user_id")
+  publishedAt               DateTime?     @map("published_at")
+  createdAt                 DateTime      @default(now()) @map("created_at")
+  updatedAt                 DateTime      @updatedAt @map("updated_at")
+
+  project  Project?   @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@index([slug])
+  @@index([publishedAt])
+  @@map("articles")
+}

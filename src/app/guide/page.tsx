@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "가성비/추천 가이드 - Dripszone",
@@ -7,13 +8,27 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function GuidePage() {
-  const upcomingTopics = [
-    { title: "자취생 필수템 추천", desc: "커뮤니티에서 반응 좋은 자취 아이템을 정리합니다." },
-    { title: "사무용 의자 가성비 비교", desc: "가격대별 사무용 의자를 비교 분석합니다." },
-    { title: "무선 이어폰 입문용 추천", desc: "10만 원 이하 무선 이어폰을 비교합니다." },
-    { title: "반려동물 자동급식기 비교", desc: "강아지/고양이 자동급식기 추천 가이드입니다." },
-  ];
+const TYPE_LABELS: Record<string, string> = {
+  GUIDE: "추천 가이드",
+  COMPARISON: "비교 분석",
+  TREND_ROUNDUP: "트렌드",
+  ISSUE_BRIDGE: "이슈 해설",
+  TOPIC_HUB: "토픽 허브",
+};
+
+export default async function GuidePage() {
+  const articles = await prisma.article.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { publishedAt: "desc" },
+    select: {
+      slug: true,
+      title: true,
+      summary: true,
+      articleType: true,
+      publishedAt: true,
+      project: { select: { name: true } },
+    },
+  });
 
   return (
     <>
@@ -24,26 +39,40 @@ export default function GuidePage() {
         </p>
       </div>
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200 mb-2">준비 중입니다</h2>
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          Dripszone 에디터가 직접 조사하고 비교한 추천 가이드를 곧 만나보실 수 있습니다.
-          커뮤니티에서 실제로 반응 좋은 제품과 서비스를 선별하여 정리할 예정입니다.
-        </p>
-      </div>
-
-      <div className="space-y-3">
-        <h2 className="text-base font-bold text-gray-900 dark:text-white">예정된 가이드</h2>
-        {upcomingTopics.map((topic, i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{topic.title}</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{topic.desc}</p>
-            <span className="inline-block mt-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">
-              준비 중
-            </span>
-          </div>
-        ))}
-      </div>
+      {articles.length === 0 ? (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-blue-800 dark:text-blue-200 mb-2">준비 중입니다</h2>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Dripszone 에디터가 직접 조사하고 비교한 추천 가이드를 곧 만나보실 수 있습니다.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {articles.map((a) => (
+            <Link
+              key={a.slug}
+              href={`/guide/${a.slug}`}
+              className="block bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  {TYPE_LABELS[a.articleType] || a.articleType}
+                </span>
+                {a.project && (
+                  <span className="text-xs text-gray-400">{a.project.name}</span>
+                )}
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{a.title}</h3>
+              {a.summary && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{a.summary}</p>
+              )}
+              <span className="inline-block mt-2 text-xs text-gray-400">
+                {a.publishedAt ? new Date(a.publishedAt).toLocaleDateString("ko-KR") : ""}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="mt-6 text-center">
         <Link href="/" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
