@@ -26,6 +26,9 @@ interface ArticleData {
   metaDescription: string | null;
   affiliateDisclosureEnabled: boolean;
   status: string;
+  origin?: string;
+  sourceNotes?: string | null;
+  sourceUrls?: string[];
 }
 
 interface ProjectItem {
@@ -130,6 +133,37 @@ export default function ArticleEditor({
       {saved && (
         <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300">
           저장되었습니다.
+        </div>
+      )}
+
+      {/* GPT 임포트 정보 */}
+      {isEdit && article?.origin === "gpt_action" && (
+        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-600 text-white">GPT 자동생성</span>
+            <span className="text-xs text-purple-600 dark:text-purple-400">Custom GPT Action으로 생성된 초안입니다</span>
+          </div>
+          {article.sourceUrls && article.sourceUrls.length > 0 && (
+            <div className="mb-2">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">출처 URL:</p>
+              <div className="space-y-1">
+                {article.sourceUrls.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
+                  >
+                    {url}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          {article.sourceNotes && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 italic">{article.sourceNotes}</p>
+          )}
         </div>
       )}
 

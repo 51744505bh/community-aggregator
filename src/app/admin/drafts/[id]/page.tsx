@@ -13,7 +13,12 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   await requireAdmin();
   const { id } = await params;
 
-  const article = await prisma.article.findUnique({ where: { id } });
+  const article = await prisma.article.findUnique({
+    where: { id },
+    include: {
+      sources: { select: { sourceUrl: true, note: true } },
+    },
+  });
   if (!article) notFound();
 
   const projects = await prisma.project.findMany({
@@ -35,6 +40,9 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
     metaDescription: article.metaDescription,
     affiliateDisclosureEnabled: article.affiliateDisclosureEnabled,
     status: article.status,
+    origin: article.origin,
+    sourceNotes: article.sourceNotes,
+    sourceUrls: article.sources.map((s) => s.sourceUrl),
   };
 
   return (

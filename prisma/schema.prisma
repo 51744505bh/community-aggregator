@@ -152,23 +152,63 @@ model Article {
   slug                      String        @unique
   status                    ArticleStatus @default(DRAFT)
   summary                   String?
+  intro                     String?       @db.Text
   bodyMd                    String        @map("body_md") @db.Text
   faqMd                     String?       @map("faq_md") @db.Text
   seoTitle                  String?       @map("seo_title")
   metaDescription           String?       @map("meta_description")
   ogImageUrl                String?       @map("og_image_url")
   affiliateDisclosureEnabled Boolean      @default(false) @map("affiliate_disclosure_enabled")
+  ctaTemplate               String?       @map("cta_template")
+  adsEnabled                Boolean       @default(true) @map("ads_enabled")
+  affiliateBlockKey         String?       @map("affiliate_block_key")
+  origin                    String        @default("manual")
+  language                  String        @default("ko")
+  sourceNotes               String?       @map("source_notes") @db.Text
   authorUserId              String?       @map("author_user_id")
   reviewerUserId            String?       @map("reviewer_user_id")
   publishedAt               DateTime?     @map("published_at")
   createdAt                 DateTime      @default(now()) @map("created_at")
   updatedAt                 DateTime      @updatedAt @map("updated_at")
 
-  project  Project?   @relation(fields: [projectId], references: [id])
+  project        Project?        @relation(fields: [projectId], references: [id])
+  sources        ArticleSource[]
+  gptImportLogs  GptImportLog[]
 
   @@index([projectId])
   @@index([status])
   @@index([slug])
   @@index([publishedAt])
   @@map("articles")
+}
+
+model ArticleSource {
+  id         String   @id @default(cuid())
+  articleId  String   @map("article_id")
+  sourceUrl  String   @map("source_url")
+  sourceType String   @default("url") @map("source_type")
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("article_sources")
+}
+
+model GptImportLog {
+  id             String   @id @default(cuid())
+  articleId      String   @map("article_id")
+  projectSlug    String?  @map("project_slug")
+  articleType    String?  @map("article_type")
+  sourceUrlsJson Json?    @map("source_urls_json")
+  payloadJson    Json?    @map("payload_json")
+  createdBy      String   @default("gpt_action") @map("created_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([createdAt])
+  @@map("gpt_import_logs")
 }
