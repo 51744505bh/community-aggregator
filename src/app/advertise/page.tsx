@@ -5,6 +5,19 @@ export const metadata: Metadata = {
   description: "Dripszone 광고 및 제휴 안내입니다. 배너 광고, 네이티브 콘텐츠, 브랜드 정리 기사, 장기 제휴 패키지를 제안합니다.",
 };
 
+const COLLABORATION_TYPES: Array<{ title: string; items: string[] }> = [
+  { title: "배너 광고", items: ["메인페이지 노출", "기사 하단 노출", "모바일 전용 중간 삽입형"] },
+  {
+    title: "네이티브 콘텐츠",
+    items: ["브랜드/제품 소개형 기사", "정보형 정리 기사 안 자연스러운 배치", "특정 주제 기반 추천형 콘텐츠"],
+  },
+  {
+    title: "브랜드 정리 기사",
+    items: ["제품/서비스 핵심 요약", "대상 독자 기준 장단점 정리", "사용 상황별 포인트 정리"],
+  },
+  { title: "장기 제휴", items: ["카테고리 고정 노출", "시리즈형 콘텐츠 협업", "월 단위 배너 + 기사 패키지"] },
+];
+
 export default function AdvertisePage() {
   return (
     <article className="space-y-6">
@@ -56,16 +69,11 @@ export default function AdvertisePage() {
       <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">가능한 협업 형태</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {[
-            ["배너 광고", ["메인페이지 노출", "기사 하단 노출", "모바일 전용 중간 삽입형"]],
-            ["네이티브 콘텐츠", ["브랜드/제품 소개형 기사", "정보형 정리 기사 안 자연스러운 배치", "특정 주제 기반 추천형 콘텐츠"]],
-            ["브랜드 정리 기사", ["제품/서비스 핵심 요약", "대상 독자 기준 장단점 정리", "사용 상황별 포인트 정리"]],
-            ["장기 제휴", ["카테고리 고정 노출", "시리즈형 콘텐츠 협업", "월 단위 배너 + 기사 패키지"]],
-          ].map(([title, items]) => (
-            <div key={title} className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-700/40">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
+          {COLLABORATION_TYPES.map((group) => (
+            <div key={group.title} className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-700/40">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{group.title}</h3>
               <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                {(items as string[]).map((item) => (
+                {group.items.map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
                     <span>{item}</span>
