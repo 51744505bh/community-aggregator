@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
+import GuideConversionBlocks from "@/components/GuideConversionBlocks";
 
 const TYPE_LABELS: Record<string, string> = {
   GUIDE: "추천 가이드",
@@ -72,6 +73,16 @@ export default async function GuideArticlePage({
 
   if (!article || article.status !== "PUBLISHED") notFound();
 
+  const relatedGuides = await prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      slug: { not: article.slug },
+    },
+    orderBy: { publishedAt: "desc" },
+    take: 4,
+    select: { slug: true, title: true },
+  });
+
   return (
     <>
       {/* 브레드크럼 */}
@@ -140,6 +151,13 @@ export default async function GuideArticlePage({
           <div dangerouslySetInnerHTML={{ __html: renderMarkdown(article.faqMd) }} />
         </div>
       )}
+
+      <GuideConversionBlocks
+        guideIndexPath="/guide"
+        affiliateDisclosureEnabled={article.affiliateDisclosureEnabled}
+        ctaTemplate={article.ctaTemplate}
+        relatedGuides={relatedGuides}
+      />
 
       <AdBanner type="coupang" />
 
