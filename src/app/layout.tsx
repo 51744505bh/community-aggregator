@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
-import VisitorTracker from "@/components/VisitorTracker";
 import { OrganizationJsonLd } from "@/components/StructuredData";
 
 const geistSans = Geist({
@@ -60,13 +60,16 @@ export default function RootLayout({
             <a href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-200">개인정보처리방침</a>
             <a href="/terms" className="hover:text-gray-700 dark:hover:text-gray-200">이용약관</a>
           </div>
-          <div className="flex justify-center">
-            <VisitorTracker />
+          <div className="flex flex-wrap justify-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+            <span>7개 커뮤니티 소스 수집</span>
+            <span>매일 데이터 업데이트</span>
+            <span>방문자 분석은 외부 통계 도구로 집계</span>
           </div>
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
             &copy; 2026 Dripszone. 수집된 게시물의 저작권은 원저작자에게 있습니다.
           </p>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
