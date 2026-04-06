@@ -228,25 +228,25 @@ export default async function Home() {
     <div className="space-y-8">
       <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-3xl bg-[linear-gradient(135deg,#0f172a,#1d4ed8_55%,#bfdbfe)] p-7 text-white shadow-sm">
-          <p className="text-sm font-medium text-blue-200">화제를 빠르게 보고, 바로 써먹는 정보까지</p>
+          <p className="text-sm font-medium text-blue-200">커뮤니티 화제를 빠르게 정리합니다</p>
           <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl">
-            커뮤니티 화제를 가장 빠르게 정리하고, 진짜 쓸모 있는 정보까지 남깁니다
+            지금 많이 보는 글을 한 번에 보기 쉽게 정리합니다
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-200">
-            지금 뜨는 이슈를 한 번에 따라잡고, 생활에 바로 쓰는 추천과 비교까지 이어서 볼 수 있게 구성했습니다.
+            실시간 화제, 오늘의 정리, 정보/꿀팁을 한곳에서 빠르게 확인할 수 있게 구성했습니다.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/live"
               className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-100"
             >
-              지금 뜨는 이슈 보기
+              실시간 화제 보기
             </Link>
             <Link
-              href="/guide"
+              href="/today"
               className="inline-flex items-center justify-center rounded-full border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
             >
-              가성비 추천 바로 보기
+              오늘의 정리 보기
             </Link>
           </div>
           {trendingKeywords.length > 0 && (
@@ -269,9 +269,32 @@ export default async function Home() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">지금 많이 클릭하는 추천</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">가볍게 둘러보기 좋은 섹션</h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              구매 의도가 높은 추천형 콘텐츠를 상단에서 바로 연결합니다.
+              자주 찾는 카테고리와 추천형 콘텐츠를 한 번에 모았습니다.
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-5">
+          {CATEGORY_HUB.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.name}</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">추천형 콘텐츠</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              생활에 바로 연결되는 비교와 추천 글만 따로 모았습니다.
             </p>
           </div>
           <Link href="/guide" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
@@ -289,7 +312,7 @@ export default async function Home() {
         <div className="mb-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">지금 뜨는 콘텐츠</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            실시간 화제와 오늘의 요약, 이슈 해설을 빠르게 훑을 수 있게 묶었습니다.
+            많이 보는 글을 섹션별로 나눠서 빠르게 볼 수 있게 정리했습니다.
           </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -328,7 +351,7 @@ export default async function Home() {
             {infoPicks.length > 0 && (
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">오늘의 정리</h3>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">정보/꿀팁</h3>
                   <Link href="/today" className="text-xs text-blue-600 hover:underline dark:text-blue-400">
                     더보기
                   </Link>

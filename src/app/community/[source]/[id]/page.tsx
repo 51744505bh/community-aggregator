@@ -7,6 +7,7 @@ import CommentSection from "@/components/CommentSection";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/StructuredData";
+import { prisma } from "@/lib/prisma";
 
 function sanitizeHtml(html: string): string {
   html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
@@ -78,6 +79,25 @@ function getPopularityLevel(post: Post): { label: string; color: string } {
   return { label: "커뮤니티 글", color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" };
 }
 
+function getGuideBridgeCopy(category: string) {
+  if (category === "info") {
+    return {
+      title: "이 화제를 실전 정보로 이어서 보기",
+      body: "실생활 팁, 제품 비교, 바로 써먹는 정리형 콘텐츠를 함께 보면 체류와 전환이 같이 올라갑니다.",
+    };
+  }
+  if (category === "issue") {
+    return {
+      title: "화제 소비에서 끝내지 말고 판단까지 연결",
+      body: "이슈가 제품, 서비스, 생활 방식과 연결되는 경우에는 비교 가이드와 실전 정리 글로 넘기는 편이 수익화에 더 유리합니다.",
+    };
+  }
+  return {
+    title: "가볍게 본 뒤 실전형 글로 넘기는 구간",
+    body: "유머나 화제 글로 들어온 방문자도 생활 정보와 추천형 콘텐츠로 자연스럽게 이어지면 광고와 제휴 전환이 함께 좋아집니다.",
+  };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -129,6 +149,26 @@ export default async function CommunityPostPage({
     month: "long",
     day: "numeric",
   });
+  const bridgeCopy = getGuideBridgeCopy(post.category);
+  let guidePicks: { slug: string; title: string; summary: string | null; articleType: string }[] = [];
+  try {
+    guidePicks = await prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        articleType: { in: ["GUIDE", "COMPARISON", "TREND_ROUNDUP"] },
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      select: {
+        slug: true,
+        title: true,
+        summary: true,
+        articleType: true,
+      },
+    });
+  } catch {
+    guidePicks = [];
+  }
 
   return (
     <article className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors">
@@ -247,11 +287,42 @@ export default async function CommunityPostPage({
       {/* 사이트 댓글 */}
       <CommentSection postId={post.id} />
 
-      {/* 관련 Dripszone 기사 안내 */}
-      <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm">
-        <p className="text-yellow-800 dark:text-yellow-200 font-medium">
-          이 주제에 대한 Dripszone 정리 기사가 준비되면 여기에 링크됩니다.
+      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-900/20">
+        <h2 className="text-base font-bold text-emerald-900 dark:text-emerald-100">{bridgeCopy.title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-emerald-800 dark:text-emerald-200">
+          {bridgeCopy.body}
         </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Link
+            href="/guide"
+            className="inline-flex items-center justify-center rounded-full bg-emerald-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-200 dark:text-emerald-950 dark:hover:bg-emerald-100"
+          >
+            가이드 허브 보기
+          </Link>
+          <Link
+            href={post.category === "info" ? "/info" : "/today"}
+            className="inline-flex items-center justify-center rounded-full border border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-100 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+          >
+            관련 섹션 더 보기
+          </Link>
+        </div>
+        {guidePicks.length > 0 && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {guidePicks.map((guide) => (
+              <Link
+                key={guide.slug}
+                href={`/guide/${guide.slug}`}
+                className="rounded-xl border border-emerald-200 bg-white px-4 py-3 transition-colors hover:bg-emerald-100/50 dark:border-emerald-800 dark:bg-gray-900/40 dark:hover:bg-emerald-900/20"
+              >
+                <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">{guide.articleType}</p>
+                <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{guide.title}</p>
+                {guide.summary && (
+                  <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">{guide.summary}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 출처 */}
