@@ -15,6 +15,7 @@ HEADERS = {
     "Accept-Language": "ko-KR,ko;q=0.9",
 }
 TOP_N = 10
+MAX_POSTS_PER_BUCKET = 60
 
 
 # -----------------------------------------
@@ -993,8 +994,27 @@ def save_to_json(posts):
         json.dump(posts, f, ensure_ascii=False, indent=2)
     print(f"posts.json 저장 완료 ({len(posts)}개)")
 
+def normalize_post_for_compare(post):
+    comparable = dict(post)
+    comparable.pop("crawled_at", None)
+    return comparable
+
+def prune_posts(posts):
+    buckets = {}
+    for post in posts:
+        key = (post.get("source"), post.get("period"))
+        buckets.setdefault(key, []).append(post)
+
+    pruned = []
+    for bucket_posts in buckets.values():
+        bucket_posts.sort(key=lambda x: x.get("crawled_at", ""), reverse=True)
+        pruned.extend(bucket_posts[:MAX_POSTS_PER_BUCKET])
+
+    pruned.sort(key=lambda x: x.get("crawled_at", ""), reverse=True)
+    return pruned
+
 def merge_posts(existing, new_posts):
-    """기존 글 보존 + 새 글 추가 (같은 id+period면 새 글로 갱신)"""
+    """의미 있는 변경만 반영하고, 동일 글은 기존 crawled_at을 보존한다."""
     post_map = {}
     for p in existing:
         key = (p["id"], p["period"])
@@ -1002,10 +1022,13 @@ def merge_posts(existing, new_posts):
 
     for p in new_posts:
         key = (p["id"], p["period"])
+        existing_post = post_map.get(key)
+        if existing_post and normalize_post_for_compare(existing_post) == normalize_post_for_compare(p):
+            post_map[key] = existing_post
+            continue
         post_map[key] = p
 
-    result = list(post_map.values())
-    result.sort(key=lambda x: x.get("crawled_at", ""), reverse=True)
+    result = prune_posts(list(post_map.values()))
     return result
 
 

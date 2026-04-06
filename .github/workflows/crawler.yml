@@ -2,8 +2,12 @@ name: Run Crawler
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 매 시간 실행
+    - cron: '0 */6 * * *'  # 6시간마다 실행
   workflow_dispatch:       # 수동 실행 가능
+
+concurrency:
+  group: crawler
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -33,16 +37,20 @@ jobs:
       - name: Run crawler
         run: python crawler/crawler.py
 
+      - name: Check for posts.json changes
+        id: changes
+        run: |
+          if git diff --quiet -- public/data/posts.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Commit and push posts.json
+        if: steps.changes.outputs.changed == 'true'
         run: |
           git config --global user.name "crawler-bot"
           git config --global user.email "bot@example.com"
           git add public/data/posts.json
-          git commit -m "Update posts.json" || echo "No changes"
+          git commit -m "Update posts.json"
           git push
-
-      - name: Deploy to Vercel
-        run: npx vercel --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

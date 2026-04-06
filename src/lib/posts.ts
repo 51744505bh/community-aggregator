@@ -32,14 +32,23 @@ function cleanSummary(s: string): string {
   return s.replace(VIDEO_NOISE_RE, "").replace(VIDEO_NOISE_SHORT_RE, "").replace(/^[\s.]+/, "").trim();
 }
 
+let cachedPosts: Post[] | null = null;
+let cachedMtimeMs = 0;
+
 export function getPosts(): Post[] {
   const filePath = path.join(process.cwd(), "public", "data", "posts.json");
   try {
+    const stat = fs.statSync(filePath);
+    if (cachedPosts && cachedMtimeMs === stat.mtimeMs) {
+      return cachedPosts;
+    }
     const data = fs.readFileSync(filePath, "utf-8");
     const posts: Post[] = JSON.parse(data);
     for (const p of posts) {
       if (p.summary) p.summary = cleanSummary(p.summary);
     }
+    cachedPosts = posts;
+    cachedMtimeMs = stat.mtimeMs;
     return posts;
   } catch {
     return [];
