@@ -1,8 +1,8 @@
-import { getPostsByCategory, getSafePosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdBanner from "@/components/AdBanner";
 import Pagination, { paginate } from "@/components/Pagination";
 import type { Metadata } from "next";
+import { getCuratedPostsByCategory } from "@/lib/curation";
 
 export const metadata: Metadata = {
   title: "이슈 해설 - 지금 화제인 이슈 정리 | Dripszone",
@@ -17,7 +17,7 @@ export default async function IssuePage({
 }) {
   const { page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
-  const allPosts = getSafePosts(getPostsByCategory("issue"));
+  const allPosts = await getCuratedPostsByCategory("issue", 200);
   const { items: posts, totalPages } = paginate(allPosts, currentPage);
 
   return (
@@ -32,7 +32,7 @@ export default async function IssuePage({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
         {posts.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            수집된 이슈 게시글이 없습니다.
+            승인된 이슈 게시글이 없습니다.
           </div>
         ) : (
           posts.map((post) => <PostCard key={post.id} post={post} />)

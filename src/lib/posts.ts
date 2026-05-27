@@ -23,6 +23,13 @@ export interface Post {
   like_count: number;
   top_comments?: PostComment[];
   crawled_at: string;
+  curator_name?: string | null;
+  custom_title?: string | null;
+  custom_summary?: string | null;
+  custom_body_md?: string | null;
+  cached_view_count?: number | null;
+  custom_category?: string | null;
+  site_view_count?: number | null;
 }
 
 const VIDEO_NOISE_RE = /Video\s*Player\s*Video\s*태그를\s*지원하지\s*않는\s*브라우저입니다[\s\S]*?(?:0\.25x|$)/gi;

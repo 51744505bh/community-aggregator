@@ -10,10 +10,17 @@ export const metadata: Metadata = {
 
 export default async function AdminDashboard() {
   const user = await requireAdmin();
+  const curatedPost = (prisma as typeof prisma & {
+    curatedPost?: {
+      count: (args: { where: { status: "APPROVED" | "HIDDEN" } }) => Promise<number>;
+    };
+  }).curatedPost;
 
-  const [teamCount, auditCount] = await Promise.all([
+  const [teamCount, auditCount, approvedCount, hiddenCount] = await Promise.all([
     prisma.adminUser.count({ where: { status: "ACTIVE" } }),
     prisma.adminAuditLog.count(),
+    curatedPost?.count({ where: { status: "APPROVED" } }).catch(() => 0) ?? Promise.resolve(0),
+    curatedPost?.count({ where: { status: "HIDDEN" } }).catch(() => 0) ?? Promise.resolve(0),
   ]);
 
   const recentLogs = await prisma.adminAuditLog.findMany({
@@ -34,7 +41,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
           <p className="text-xs text-gray-500 dark:text-gray-400">활성 팀원</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
@@ -48,9 +55,15 @@ export default async function AdminDashboard() {
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400">내 역할</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">승인된 큐레이션</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-            {user.role}
+            {approvedCount}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">제외한 글</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            {hiddenCount}
           </p>
         </div>
       </div>
@@ -58,7 +71,7 @@ export default async function AdminDashboard() {
       {/* 빠른 링크 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         {[
-          { href: "/admin/inbox", label: "수집함" },
+          { href: "/admin/inbox", label: "큐레이션 수집함" },
           { href: "/admin/drafts", label: "초안 관리" },
           { href: "/admin/review", label: "검수 대기" },
           { href: "/admin/publish", label: "발행 관리" },

@@ -36,11 +36,11 @@ export default function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-6">
+    <div className="mt-6 flex items-center justify-center gap-1">
       {currentPage > 1 && (
         <Link
           href={`${basePath}${sep}page=${currentPage - 1}`}
-          className="px-3 py-2 text-sm rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
         >
           이전
         </Link>
@@ -54,10 +54,10 @@ export default function Pagination({
           <Link
             key={p}
             href={`${basePath}${sep}page=${p}`}
-            className={`px-3 py-2 text-sm rounded-md border ${
+            className={`rounded border px-3 py-2 text-sm ${
               p === currentPage
-                ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white font-bold"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                ? "border-gray-900 bg-gray-900 font-bold text-white"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
             }`}
           >
             {p}
@@ -67,7 +67,7 @@ export default function Pagination({
       {currentPage < totalPages && (
         <Link
           href={`${basePath}${sep}page=${currentPage + 1}`}
-          className="px-3 py-2 text-sm rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
         >
           다음
         </Link>

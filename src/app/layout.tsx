@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dripszone - 커뮤니티 화제를 빠르게 정리하는 유머/정보 미디어",
+  title: "Dripszone - 커뮤니티 베스트 피드 허브",
   description:
-    "커뮤니티에서 뜨는 화제를 빠르게 정리하고, 웃을 거리와 유용한 정보를 함께 제공합니다. 오늘의 정리, 이슈 해설, 유머, 정보/꿀팁, 가성비 추천 가이드.",
+    "24시간, 주간, 월간 기준으로 커뮤니티 인기글을 빠르게 모아보는 피드 허브입니다.",
   robots: {
     index: true,
     follow: true,
@@ -49,18 +49,18 @@ export default function RootLayout({
       >
         <OrganizationJsonLd />
         <NavBar />
-        <main className="max-w-4xl mx-auto px-4 pt-24 pb-6">{children}</main>
-        <footer className="max-w-4xl mx-auto px-4 py-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
-            <a href="/about" className="hover:text-gray-700 dark:hover:text-gray-200">About</a>
-            <a href="/editorial-policy" className="hover:text-gray-700 dark:hover:text-gray-200">편집 정책</a>
-            <a href="/advertise" className="hover:text-gray-700 dark:hover:text-gray-200">광고/제휴</a>
-            <a href="/copyright" className="hover:text-gray-700 dark:hover:text-gray-200">저작권</a>
-            <a href="/contact" className="hover:text-gray-700 dark:hover:text-gray-200">Contact</a>
-            <a href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-200">개인정보처리방침</a>
-            <a href="/terms" className="hover:text-gray-700 dark:hover:text-gray-200">이용약관</a>
+        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <footer className="mx-auto max-w-5xl border-t border-gray-200 px-4 py-8">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500">
+            <a href="/about" className="hover:text-gray-800">About</a>
+            <a href="/editorial-policy" className="hover:text-gray-800">편집 정책</a>
+            <a href="/advertise" className="hover:text-gray-800">광고/제휴</a>
+            <a href="/copyright" className="hover:text-gray-800">저작권</a>
+            <a href="/contact" className="hover:text-gray-800">Contact</a>
+            <a href="/privacy" className="hover:text-gray-800">개인정보처리방침</a>
+            <a href="/terms" className="hover:text-gray-800">이용약관</a>
           </div>
-          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
+          <p className="mt-3 text-xs text-gray-400">
             &copy; 2026 Dripszone. 수집된 게시물의 저작권은 원저작자에게 있습니다.
           </p>
         </footer>

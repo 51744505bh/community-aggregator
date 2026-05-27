@@ -16,28 +16,30 @@ function getThumbnailProps(url: string) {
 
 export default function PostCard({ post }: { post: Post }) {
   const colorClass = sourceColors[post.source] || "bg-gray-100 text-gray-700";
+  const displayViews = post.cached_view_count ?? post.site_view_count ?? 0;
+  const authorName = post.curator_name || "드립지기";
 
   return (
     <Link href={getCommunityUrl(post)} className="block">
-      <div className="flex gap-4 p-4 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+      <div className="flex gap-3 border-b border-gray-100 bg-white px-4 py-4 transition-colors hover:bg-gray-50">
         {post.thumbnail_url && (
           <img
             {...getThumbnailProps(post.thumbnail_url)}
             alt=""
-            className="w-32 h-24 object-cover rounded flex-shrink-0"
+            className="hidden h-20 w-28 flex-shrink-0 rounded object-cover sm:block"
           />
         )}
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="mb-2 line-clamp-2 text-[17px] font-bold leading-6 text-gray-900">
             {post.title}
           </h2>
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className={`${colorClass} px-2 py-0.5 rounded text-xs font-medium`}
-            >
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span className={`${colorClass} rounded px-1.5 py-0.5 text-[11px] font-semibold`}>
               {post.source_name}
             </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
+            <span className="font-medium text-gray-700">{authorName}</span>
+            <span className="text-gray-400">|</span>
+            <span className="text-gray-400">
               {new Date(post.crawled_at).toLocaleDateString("ko-KR", {
                 month: "short",
                 day: "numeric",
@@ -46,13 +48,8 @@ export default function PostCard({ post }: { post: Post }) {
               })}
             </span>
           </div>
-          {post.summary && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
-              {post.summary}
-            </p>
-          )}
-          <div className="flex gap-3 text-xs text-gray-400 dark:text-gray-500">
-            {post.view_count > 0 && <span>조회 {post.view_count.toLocaleString()}</span>}
+          <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+            <span>조회수 {displayViews.toLocaleString()}</span>
             <span>추천 {post.like_count.toLocaleString()}</span>
             <span>댓글 {post.comment_count.toLocaleString()}</span>
           </div>

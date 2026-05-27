@@ -69,6 +69,7 @@ model AdminUser {
 
   invitesSent AdminInvite[]  @relation("InviteSender")
   auditLogs   AdminAuditLog[]
+  curatedPosts CuratedPost[]
 
   @@map("admin_users")
 }
@@ -126,6 +127,18 @@ enum ArticleStatus {
   READY_TO_PUBLISH
   PUBLISHED
   ARCHIVED
+}
+
+enum CurationStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+}
+
+enum CurationBucket {
+  BEST_24H
+  BEST_WEEKLY
+  BEST_MONTHLY
 }
 
 model Project {
@@ -211,4 +224,28 @@ model GptImportLog {
   @@index([articleId])
   @@index([createdAt])
   @@map("gpt_import_logs")
+}
+
+model CuratedPost {
+  id             String         @id @default(cuid())
+  postId         String         @unique @map("post_id")
+  status         CurationStatus @default(PENDING)
+  bucket         CurationBucket? 
+  rank           Int?
+  note           String?
+  curatorName    String?        @map("curator_name")
+  customCategory String?        @map("custom_category")
+  customTitle    String?        @map("custom_title")
+  customSummary  String?        @map("custom_summary")
+  customBodyMd   String?        @map("custom_body_md") @db.Text
+  cachedViewCount Int?          @map("cached_view_count")
+  pickedByUserId String?        @map("picked_by_user_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  pickedBy AdminUser? @relation(fields: [pickedByUserId], references: [id])
+
+  @@index([status, bucket])
+  @@index([pickedByUserId])
+  @@map("curated_posts")
 }

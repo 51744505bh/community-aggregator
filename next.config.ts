@@ -9,8 +9,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: "/weekly", destination: "/best/weekly", permanent: true },
-      { source: "/monthly", destination: "/best/monthly", permanent: true },
+      { source: "/live", destination: "/best_24h", permanent: true },
+      { source: "/weekly", destination: "/best_weekly", permanent: true },
+      { source: "/monthly", destination: "/best_monthly", permanent: true },
+      { source: "/best/24h", destination: "/best_24h", permanent: true },
+      { source: "/best/weekly", destination: "/best_weekly", permanent: true },
+      { source: "/best/monthly", destination: "/best_monthly", permanent: true },
       { source: "/category/humor", destination: "/humor", permanent: true },
       { source: "/category/issue", destination: "/issue", permanent: true },
       { source: "/category/info", destination: "/info", permanent: true },
