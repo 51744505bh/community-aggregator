@@ -1,4 +1,6 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':!public/data/posts.json'",
   "regions": ["icn1"],
   "functions": {
     "src/app/api/**/*.ts": {
